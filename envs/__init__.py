@@ -1,0 +1,1 @@
+from mujoco_env import env_register
