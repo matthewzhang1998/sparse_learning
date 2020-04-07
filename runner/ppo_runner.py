@@ -12,12 +12,12 @@ import multiprocessing
 from util import init_path
 from util import parallel_util
 from util import logger
-from envs import env_register
+from env import env_register
 import numpy as np
 
 
 class Sampler(object):
-    def __init__(self, params, worker_proto, network_proto):
+    def __init__(self, params, worker_proto, network_proto, subtask=None):
         self.params = params
         self._npr = np.random.RandomState(params.seed + 23333)
         self._observation_size, self._action_size, \
@@ -25,6 +25,8 @@ class Sampler(object):
             env_register.io_information(self.params.task)
         self._worker_type = worker_proto
         self._network_type = network_proto
+
+        self.subtask = subtask
 
         # init the multiprocess actors
         self._task_queue = multiprocessing.JoinableQueue()
@@ -46,11 +48,11 @@ class Sampler(object):
 
         for worker in range(self.params.num_workers):
             self._workers.append(
-                self._worker_type.worker(
+                self._worker_type.Worker(
                     self.params, self._observation_size, self._action_size,
                     self._action_distribution,
                     self._network_type, self._task_queue, self._result_queue,
-                    worker,
+                    worker, subtask=self.subtask
                 )
             )
 
@@ -91,6 +93,10 @@ class Sampler(object):
                 break
 
         return {'data': rollout_data}
+
+    def render(self, it, save_loc):
+        self._task_queue.put((parallel_util.AGENT_RENDER, {'it': it, 'save_loc': save_loc}))
+        self._task_queue.join()
 
     def end(self):
         for i_agent in range(self.params.num_workers):

@@ -1,7 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="f7b90a3b-8784-43ec-a9a4-de958fcb3d21" name="Default Changelist" comment="" />
+    <list default="true" id="a1e569c7-c1e5-4333-9707-e01634d7de83" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/env/assets/robot.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/env/assets/robot_composite.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/env/assets/shared.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/env/init_path.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/env/robot_composite.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/env/robot_env.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/sparse_main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/policy/consolidated_ppo_policy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/policy/sparse_ppo_policy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/base_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config/base_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/assets/common/materials.xml" beforeDir="false" afterPath="$PROJECT_DIR$/env/assets/common/materials.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/assets/common/skybox.xml" beforeDir="false" afterPath="$PROJECT_DIR$/env/assets/common/skybox.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/assets/common/visual.xml" beforeDir="false" afterPath="$PROJECT_DIR$/env/assets/common/visual.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/assets/point.xml" beforeDir="false" afterPath="$PROJECT_DIR$/env/assets/point.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/env_register.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/env_register.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/env_util.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/env_util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/init_path.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/mujoco_env.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/mujoco_env.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/envs/point_composite.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/point_composite.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/baseline_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/baseline_main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/policy/base_policy.py" beforeDir="false" afterPath="$PROJECT_DIR$/policy/base_policy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/policy/ppo_policy.py" beforeDir="false" afterPath="$PROJECT_DIR$/policy/ppo_policy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runner/ppo_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/runner/ppo_runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runner/worker/base_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/runner/worker/base_worker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trainer/trainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/trainer/trainer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/logger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/misc_util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/misc_util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/network_util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/network_util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/parallel_util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/parallel_util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/replay_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/replay_buffer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/tf_util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/tf_util.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -9,107 +44,40 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/policy/consolidated_ppo_policy.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="269">
+              <caret line="649" lean-forward="true" selection-start-line="649" selection-end-line="649" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/util/network_util.py">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/util/tf_util.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2895">
+              <caret line="194" column="26" selection-start-line="194" selection-start-column="26" selection-end-line="194" selection-end-column="26" />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/policy/base_policy.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="11" column="16" selection-start-line="11" selection-start-column="16" selection-end-line="11" selection-end-column="16" />
+            <state relative-caret-position="225">
+              <caret line="96" column="12" selection-start-line="96" selection-start-column="12" selection-end-line="96" selection-end-column="12" />
               <folding>
-                <element signature="e#114#137#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/policy/ppo_policy.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="117">
-              <caret line="205" column="54" selection-start-line="205" selection-start-column="47" selection-end-line="205" selection-end-column="54" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/config/base_config.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
-              <caret line="15" column="66" selection-start-line="15" selection-start-column="66" selection-end-line="15" selection-end-column="66" />
-              <folding>
-                <element signature="e#1#16#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/envs/env_register.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="18">
-              <caret line="16" column="1" selection-start-line="16" selection-start-column="1" selection-end-line="16" selection-end-column="1" />
-              <folding>
-                <element signature="e#115#131#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/runner/ppo_runner.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
-              <caret line="99" column="57" selection-start-line="99" selection-start-column="49" selection-end-line="99" selection-end-column="57" />
-              <folding>
-                <element signature="e#159#181#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/util/init_path.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="213">
-              <caret line="15" column="57" selection-start-line="15" selection-start-column="57" selection-end-line="15" selection-end-column="57" />
-              <folding>
-                <element signature="e#274#295#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/util/logger.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="126">
-              <caret line="114" column="43" selection-start-line="114" selection-start-column="43" selection-end-line="114" selection-end-column="43" />
-              <folding>
-                <element signature="e#340#354#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/envs/mujoco_env.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-18">
-              <caret line="57" column="34" selection-start-line="57" selection-start-column="34" selection-end-line="57" selection-end-column="34" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/main/baseline_main.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="426">
-              <caret line="214" column="39" selection-start-line="214" selection-start-column="39" selection-end-line="214" selection-end-column="39" />
-              <folding>
-                <element signature="e#116#125#0" expanded="true" />
+                <element signature="e#193#211#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -118,8 +86,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/trainer/trainer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
+            <state relative-caret-position="1830">
+              <caret line="128" column="36" selection-start-line="128" selection-start-column="36" selection-end-line="128" selection-end-column="36" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -138,77 +106,101 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>utils.</find>
+      <find>self.Tensor['Jacobian']</find>
+      <find>run_dumm</find>
+      <find>jacobian</find>
+      <find>dummy_size</find>
+      <find>seed</find>
+      <find>plot_jacobian</find>
+      <find>jacobian_objective</find>
+      <find>jacobian_easy</find>
+      <find>s</find>
+      <find>prune_k</find>
+      <find>grad</find>
+      <find>train</find>
+      <find>for i in</find>
+      <find>.run(</find>
+      <find>def _</find>
+      <find>def</find>
       <find>train(</find>
-      <find>tf_utils</find>
-      <find>tf_</find>
-      <find>util</find>
-      <find>tf_util</find>
-      <find>GetFrom</find>
-      <find>network_util</find>
-      <find>self.args</find>
-      <find>norm</find>
-      <find>train()</find>
-      <find>self.data</find>
-      <find>qpos</find>
-      <find>self.params</find>
-      <find>target_reset</find>
-      <find>step</find>
-      <find>reset</find>
-      <find>play</find>
-      <find>use_default_states</find>
-      <find>parallel_util</find>
-      <find>args</find>
-      <find>goal</find>
-      <find>step()</find>
-      <find>self._seed</find>
-      <find>step(</find>
-      <find>params</find>
-      <find>params.</find>
-      <find>logger</find>
-      <find>maximum</find>
-      <find>make_env</find>
+      <find>loss</find>
+      <find>self.Tensor['loss_function']</find>
+      <find>iter</find>
+      <find>error</find>
+      <find>make_trainer</find>
+      <find>build_m</find>
+      <find>op</find>
+      <find>variable_</find>
+      <find>_session</find>
+      <find>build_writer</find>
+      <find>self.Summary</find>
+      <find>correlation</find>
+      <find>value_weights</find>
     </findStrings>
+    <replaceStrings>
+      <replace />
+    </replaceStrings>
+    <dirStrings>
+      <dir>$PROJECT_DIR$/model/networks</dir>
+    </dirStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
+        <option value="$PROJECT_DIR$/runner/test_runner.py" />
+        <option value="$PROJECT_DIR$/main/b_main.py" />
         <option value="$PROJECT_DIR$/main/__init__.py" />
-        <option value="$PROJECT_DIR$/envs/box2.py" />
-        <option value="$PROJECT_DIR$/agents/ppo.py" />
-        <option value="$PROJECT_DIR$/envs/__init__.py" />
-        <option value="$PROJECT_DIR$/runner/worker/threaded_worker.py" />
-        <option value="$PROJECT_DIR$/envs/box2_env.py" />
-        <option value="$PROJECT_DIR$/envs/assets/common/skybox.xml.py" />
-        <option value="$PROJECT_DIR$/envs/assets/common/skybox.xml" />
-        <option value="$PROJECT_DIR$/envs/assets/common/materials.xml" />
-        <option value="$PROJECT_DIR$/envs/assets/common/visual.xml" />
-        <option value="$PROJECT_DIR$/envs/init_path.py" />
-        <option value="$PROJECT_DIR$/utils/init_path.py" />
-        <option value="$PROJECT_DIR$/envs/base_env.py" />
-        <option value="$PROJECT_DIR$/policy/ppo_model.py" />
-        <option value="$PROJECT_DIR$/util/replay_buffer.py" />
-        <option value="$PROJECT_DIR$/util/tf_util.py" />
-        <option value="$PROJECT_DIR$/util/norm_util.py" />
-        <option value="$PROJECT_DIR$/util/network_util.py" />
-        <option value="$PROJECT_DIR$/util/misc_util.py" />
-        <option value="$PROJECT_DIR$/util/parallel_util.py" />
-        <option value="$PROJECT_DIR$/util/whitening_util.py" />
-        <option value="$PROJECT_DIR$/envs/assets/point.xml" />
-        <option value="$PROJECT_DIR$/envs/env_utils.py" />
-        <option value="$PROJECT_DIR$/envs/env_util.py" />
-        <option value="$PROJECT_DIR$/runner/worker/base_worker.py" />
-        <option value="$PROJECT_DIR$/runner/ppo_runner.py" />
-        <option value="$PROJECT_DIR$/policy/base_policy.py" />
-        <option value="$PROJECT_DIR$/trainer/trainer.py" />
-        <option value="$PROJECT_DIR$/envs/mujoco_env.py" />
-        <option value="$PROJECT_DIR$/envs/point_composite.py" />
-        <option value="$PROJECT_DIR$/policy/ppo_policy.py" />
-        <option value="$PROJECT_DIR$/util/init_path.py" />
-        <option value="$PROJECT_DIR$/util/logger.py" />
-        <option value="$PROJECT_DIR$/main/baseline_main.py" />
-        <option value="$PROJECT_DIR$/envs/env_register.py" />
+        <option value="$PROJECT_DIR$/main/init_path.py" />
+        <option value="$PROJECT_DIR$/init_path.py" />
+        <option value="$PROJECT_DIR$/log/plot_all.py" />
+        <option value="$PROJECT_DIR$/runner/b_regress.py" />
+        <option value="$PROJECT_DIR$/model/unit.py" />
+        <option value="$PROJECT_DIR$/data/load_1b.py" />
+        <option value="$PROJECT_DIR$/runner/b_hess_unit.py" />
+        <option value="$PROJECT_DIR$/util/logger_util.py" />
+        <option value="$PROJECT_DIR$/model/unit_hess.py" />
+        <option value="$PROJECT_DIR$/model/regress.py" />
+        <option value="$PROJECT_DIR$/data/load_wiki.py" />
+        <option value="$PROJECT_DIR$/runner/mlp_hess_unit.py" />
+        <option value="$PROJECT_DIR$/data/load_pen.py" />
+        <option value="$PROJECT_DIR$/mlp_main.py" />
+        <option value="$PROJECT_DIR$/model/mlp_unit_hess.py" />
+        <option value="$PROJECT_DIR$/model/networks/mlp_unit_regress.py" />
+        <option value="$PROJECT_DIR$/model/mlp_regress.py" />
+        <option value="$PROJECT_DIR$/util/sparse_ff_util.py" />
+        <option value="$PROJECT_DIR$/model/networks/mlp_regress.py" />
+        <option value="$PROJECT_DIR$/data/load_mnist.py" />
+        <option value="$PROJECT_DIR$/config/mlp_config.py" />
+        <option value="$PROJECT_DIR$/runner/mlp_hess.py" />
+        <option value="$PROJECT_DIR$/model/networks/rnn_unit_regress.py" />
+        <option value="$PROJECT_DIR$/model/dense.py" />
+        <option value="$PROJECT_DIR$/b_main.py" />
+        <option value="$PROJECT_DIR$/model/networks/rnn_regress.py" />
+        <option value="$PROJECT_DIR$/model/networks/rnn_dense.py" />
+        <option value="$PROJECT_DIR$/util/dense_util.py" />
+        <option value="$PROJECT_DIR$/runner/b_dense.py" />
+        <option value="$PROJECT_DIR$/util/sparse_util.py" />
+        <option value="$PROJECT_DIR$/runner/b_l2.py" />
+        <option value="$PROJECT_DIR$/runner/b_sparse_vanilla.py" />
+        <option value="$PROJECT_DIR$/data/load_seqmnist.py" />
+        <option value="$PROJECT_DIR$/runner/b_custom.py" />
+        <option value="$PROJECT_DIR$/runner/base_runner.py" />
+        <option value="$PROJECT_DIR$/runner/b_hess.py" />
+        <option value="$PROJECT_DIR$/util/random_util.py" />
+        <option value="$PROJECT_DIR$/util/tensorflow_util.py" />
+        <option value="$PROJECT_DIR$/regress/json_finder.py" />
+        <option value="$PROJECT_DIR$/README.txt" />
+        <option value="$PROJECT_DIR$/util/initializer_util.py" />
+        <option value="$PROJECT_DIR$/config/rnn_config.py" />
         <option value="$PROJECT_DIR$/config/base_config.py" />
+        <option value="$PROJECT_DIR$/main/sparse_main.py" />
+        <option value="$PROJECT_DIR$/trainer/trainer.py" />
+        <option value="$PROJECT_DIR$/policy/base_policy.py" />
+        <option value="$PROJECT_DIR$/util/tf_util.py" />
+        <option value="$PROJECT_DIR$/policy/consolidated_ppo_policy.py" />
       </list>
     </option>
   </component>
@@ -218,6 +210,7 @@
     <option name="width" value="1186" />
     <option name="height" value="653" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -227,74 +220,108 @@
         <subPane>
           <expand>
             <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
+              <item name="vc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vc" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
+              <item name="vc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vc" type="462c0819:PsiDirectoryNode" />
               <item name="config" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
-              <item name="envs" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
-              <item name="envs" type="462c0819:PsiDirectoryNode" />
-              <item name="assets" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
+              <item name="vc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vc" type="462c0819:PsiDirectoryNode" />
               <item name="main" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
+              <item name="vc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vc" type="462c0819:PsiDirectoryNode" />
               <item name="policy" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
+              <item name="vc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vc" type="462c0819:PsiDirectoryNode" />
               <item name="runner" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
-              <item name="runner" type="462c0819:PsiDirectoryNode" />
-              <item name="worker" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
+              <item name="vc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vc" type="462c0819:PsiDirectoryNode" />
               <item name="trainer" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="sparse_learning" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sparse_learning" type="462c0819:PsiDirectoryNode" />
+              <item name="vc" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vc" type="462c0819:PsiDirectoryNode" />
               <item name="util" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
+      <pane id="Scope">
+        <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
+          <expand>
+            <path>
+              <item name="pruning" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+            <path>
+              <item name="pruning" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="config" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="pruning" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="data" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="pruning" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="data" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+              <item name="1b" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="pruning" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="data" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+              <item name="1b" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+              <item name="training-monolingual.tokenized.shuffled" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="pruning" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="main" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="pruning" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="model" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="pruning" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="runner" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../vc/pruning" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="configurable.group.appearance" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/trainer" />
+    <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/runner/worker" />
-      <recent name="$PROJECT_DIR$/agents" />
-      <recent name="$PROJECT_DIR$/config" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/model/networks" />
+      <recent name="$PROJECT_DIR$/model" />
+      <recent name="$PROJECT_DIR$/runner" />
+      <recent name="$PROJECT_DIR$/util" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -309,16 +336,136 @@
       </list>
     </option>
   </component>
+  <component name="RunManager" selected="Python.json_finder">
+    <configuration name="Unnamed" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="pruning" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../anaconda3/bin/python" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="pruning" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../anaconda3/bin/python" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="b_regress" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="pruning" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../anaconda3/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/runner" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/runner/b_regress.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="json_finder" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="pruning" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../anaconda3/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/regress" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/regress/json_finder.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="plot_all" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="pruning" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../anaconda3/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/log" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/log/plot_all.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.Unnamed" />
+      <item itemvalue="Python.b_regress" />
+      <item itemvalue="Python.json_finder" />
+      <item itemvalue="Python.plot_all" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.json_finder" />
+        <item itemvalue="Python.b_regress" />
+        <item itemvalue="Python.plot_all" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SvnConfiguration">
     <configuration />
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="f7b90a3b-8784-43ec-a9a4-de958fcb3d21" name="Default Changelist" comment="" />
-      <created>1572134216206</created>
+      <changelist id="a1e569c7-c1e5-4333-9707-e01634d7de83" name="Default Changelist" comment="" />
+      <created>1552794959561</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1572134216206</updated>
+      <updated>1552794959561</updated>
     </task>
     <servers />
   </component>
@@ -326,292 +473,153 @@
     <frame x="-3" y="31" width="1096" height="562" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4990177" visible="true" weight="0.24602433" />
-      <window_info id="Structure" order="1" sideWeight="0.50098234" side_tool="true" weight="0.24681933" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49705306" visible="true" weight="0.22544435" />
+      <window_info id="Structure" order="1" sideWeight="0.502947" side_tool="true" weight="0.24681933" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" visible="true" weight="0.32951945" />
+      <window_info anchor="bottom" id="Find" order="1" />
       <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3280943" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.3988212" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Terminal" order="8" />
-      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" weight="0.32951945" />
-      <window_info anchor="bottom" id="Python Console" order="10" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.3280943" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
     </layout>
+    <layout-to-restore>
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49705306" visible="true" weight="0.24681933" />
+      <window_info id="Structure" order="1" sideWeight="0.502947" side_tool="true" weight="0.24681933" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3280943" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.3988212" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Terminal" order="8" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.3280943" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout-to-restore>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/runner/b_sparse_vanilla.py</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/main/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/runner/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/policy/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/runner/worker/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/__init__.py">
+    <entry file="file://$PROJECT_DIR$/model/networks/mlp_unit.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/mlp_unit_regress.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/rnn.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/rnn_drw.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/rnn_regress.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/rnn_snip.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/rnn_unit.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/rnn_unit_regress.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/rnn_vanilla.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_drw.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_hess_unit.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_l2.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_snip.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_regress.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_sparse.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_vanilla.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_sparse_vanilla.py" />
+    <entry file="file://$PROJECT_DIR$/runner/cnn.py" />
+    <entry file="file://$PROJECT_DIR$/runner/ptb_snip.py" />
+    <entry file="file://$PROJECT_DIR$/runner/ptb_sparse.py" />
+    <entry file="file://$PROJECT_DIR$/runner/ptb_vanilla.py" />
+    <entry file="file://$PROJECT_DIR$/runner/rnn_add.py" />
+    <entry file="file://$PROJECT_DIR$/runner/rnn_mnist.py" />
+    <entry file="file://$PROJECT_DIR$/runner/simple_sparse.py" />
+    <entry file="file://$PROJECT_DIR$/runner/test_runner.py" />
+    <entry file="file://$PROJECT_DIR$/runner/mnist.py" />
+    <entry file="file://$PROJECT_DIR$/runner/mlp_hess.py" />
+    <entry file="file://$PROJECT_DIR$/regress/json_finder.py" />
+    <entry file="file://$PROJECT_DIR$/README.txt" />
+    <entry file="file://$PROJECT_DIR$/runner/init_path.py" />
+    <entry file="file://$PROJECT_DIR$/util/initializer_util.py" />
+    <entry file="file://$PROJECT_DIR$/model/networks/rnn_dense.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_custom.py" />
+    <entry file="file://$PROJECT_DIR$/util/rnn_util.py" />
+    <entry file="file://$PROJECT_DIR$/util/sparse_util.py" />
+    <entry file="file://$PROJECT_DIR$/data/load_1b.py" />
+    <entry file="file://$PROJECT_DIR$/data/load_pen.py" />
+    <entry file="file://$PROJECT_DIR$/main/ptb_main.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_dense.py" />
+    <entry file="file://$PROJECT_DIR$/b_main.py" />
+    <entry file="file://$PROJECT_DIR$/runner/base_runner.py" />
+    <entry file="file://$PROJECT_DIR$/config/rnn_config.py" />
+    <entry file="file://$PROJECT_DIR$/runner/b_hess.py" />
+    <entry file="file://$PROJECT_DIR$/main/sparse_main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="35" selection-start-column="35" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/assets/common/skybox.xml.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/assets/common/skybox.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="9" selection-start-line="5" selection-start-column="9" selection-end-line="5" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/assets/common/materials.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="23" selection-start-line="23" selection-end-line="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/assets/common/visual.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="9" selection-start-line="6" selection-start-column="9" selection-end-line="6" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/trainer/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/base_env.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/util/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/util/norm_util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="381">
-          <caret line="68" column="14" selection-start-line="68" selection-start-column="14" selection-end-line="68" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/assets/point.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="28" column="11" lean-forward="true" selection-start-line="28" selection-start-column="11" selection-end-line="28" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/init_path.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/env_util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="990">
-          <caret line="66" column="26" lean-forward="true" selection-start-line="66" selection-start-column="26" selection-end-line="66" selection-end-column="26" />
-          <folding>
-            <element signature="e#114#132#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/util/tf_util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3000">
-          <caret line="200" column="40" selection-start-line="200" selection-start-column="40" selection-end-line="200" selection-end-column="40" />
-          <folding>
-            <element signature="e#173#196#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/util/whitening_util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1545">
-          <caret line="103" column="41" selection-start-line="103" selection-start-column="41" selection-end-line="103" selection-end-column="41" />
-          <folding>
-            <element signature="e#194#212#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/util/parallel_util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="720">
-          <caret line="48" column="29" selection-start-line="48" selection-start-column="29" selection-end-line="48" selection-end-column="29" />
+        <state relative-caret-position="269">
+          <caret line="102" column="34" selection-start-line="102" selection-start-column="34" selection-end-line="102" selection-end-column="34" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/util/replay_buffer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6495">
-          <caret line="433" column="54" selection-start-line="433" selection-start-column="54" selection-end-line="433" selection-end-column="54" />
-        </state>
+        <state relative-caret-position="-4410" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/util/network_util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="18" selection-start-line="5" selection-start-column="18" selection-end-line="5" selection-end-column="18" />
-          <folding>
-            <element signature="e#99#122#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/util/misc_util.py">
+    <entry file="file://$PROJECT_DIR$/util/tf_util.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="8" column="26" selection-start-line="8" selection-start-column="26" selection-end-line="8" selection-end-column="26" />
-          <folding>
-            <element signature="e#226#244#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="2895">
+          <caret line="194" column="26" selection-start-line="194" selection-start-column="26" selection-end-line="194" selection-end-column="26" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/trainer/trainer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
+        <state relative-caret-position="1830">
+          <caret line="128" column="36" selection-start-line="128" selection-start-column="36" selection-end-line="128" selection-end-column="36" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/runner/worker/base_worker.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1815">
-          <caret line="22" column="29" selection-start-line="22" selection-start-column="29" selection-end-line="22" selection-end-column="29" />
-          <caret line="29" column="19" selection-start-line="29" selection-start-column="19" selection-end-line="29" selection-end-column="19" />
-          <caret line="29" column="28" selection-start-line="29" selection-start-column="28" selection-end-line="29" selection-end-column="28" />
-          <caret line="33" column="48" selection-start-line="33" selection-start-column="48" selection-end-line="33" selection-end-column="48" />
-          <caret line="52" column="51" selection-start-line="52" selection-start-column="51" selection-end-line="52" selection-end-column="51" />
-          <caret line="97" column="23" selection-start-line="97" selection-start-column="23" selection-end-line="97" selection-end-column="23" />
-          <caret line="113" column="22" selection-start-line="113" selection-start-column="22" selection-end-line="113" selection-end-column="22" />
-          <caret line="114" column="61" selection-start-line="114" selection-start-column="61" selection-end-line="114" selection-end-column="61" />
-          <caret line="116" column="31" selection-start-line="116" selection-start-column="31" selection-end-line="116" selection-end-column="31" />
-          <caret line="117" column="31" selection-start-line="117" selection-start-column="31" selection-end-line="117" selection-end-column="31" />
-          <caret line="118" column="49" selection-start-line="118" selection-start-column="49" selection-end-line="118" selection-end-column="49" />
-          <caret line="128" column="31" selection-start-line="128" selection-start-column="31" selection-end-line="128" selection-end-column="31" />
-          <caret line="129" column="31" selection-start-line="129" selection-start-column="31" selection-end-line="129" selection-end-column="31" />
-          <caret line="130" column="49" selection-start-line="130" selection-start-column="49" selection-end-line="130" selection-end-column="49" />
-          <caret line="139" column="22" selection-start-line="139" selection-start-column="22" selection-end-line="139" selection-end-column="22" />
-          <folding>
-            <element signature="e#159#177#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/policy/base_policy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="11" column="16" selection-start-line="11" selection-start-column="16" selection-end-line="11" selection-end-column="16" />
-          <folding>
-            <element signature="e#114#137#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/mujoco_env.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-18">
-          <caret line="57" column="34" selection-start-line="57" selection-start-column="34" selection-end-line="57" selection-end-column="34" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/point_composite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-45">
-          <caret line="18" column="55" selection-start-line="18" selection-start-column="55" selection-end-line="18" selection-end-column="55" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/policy/ppo_policy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="117">
-          <caret line="205" column="54" selection-start-line="205" selection-start-column="47" selection-end-line="205" selection-end-column="54" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/util/init_path.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="213">
-          <caret line="15" column="57" selection-start-line="15" selection-start-column="57" selection-end-line="15" selection-end-column="57" />
-          <folding>
-            <element signature="e#274#295#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/util/logger.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="126">
-          <caret line="114" column="43" selection-start-line="114" selection-start-column="43" selection-end-line="114" selection-end-column="43" />
-          <folding>
-            <element signature="e#340#354#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/main/baseline_main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="426">
-          <caret line="214" column="39" selection-start-line="214" selection-start-column="39" selection-end-line="214" selection-end-column="39" />
-          <folding>
-            <element signature="e#116#125#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/envs/env_register.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="18">
-          <caret line="16" column="1" selection-start-line="16" selection-start-column="1" selection-end-line="16" selection-end-column="1" />
-          <folding>
-            <element signature="e#115#131#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/runner/ppo_runner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
-          <caret line="99" column="57" selection-start-line="99" selection-start-column="49" selection-end-line="99" selection-end-column="57" />
-          <folding>
-            <element signature="e#159#181#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/config/base_config.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
-          <caret line="15" column="66" selection-start-line="15" selection-start-column="66" selection-end-line="15" selection-end-column="66" />
+        <state relative-caret-position="-210">
+          <caret line="76" column="36" selection-start-line="76" selection-start-column="32" selection-end-line="76" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/policy/base_policy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="96" column="12" selection-start-line="96" selection-start-column="12" selection-end-line="96" selection-end-column="12" />
           <folding>
-            <element signature="e#1#16#0" expanded="true" />
+            <element signature="e#193#211#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/policy/consolidated_ppo_policy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="269">
+          <caret line="649" lean-forward="true" selection-start-line="649" selection-end-line="649" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>

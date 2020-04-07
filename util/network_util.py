@@ -4,6 +4,7 @@
 """
 import tensorflow as tf
 import numpy as np
+from util import norm_util
 
 def get_activation_func(activation_type):
     if activation_type == 'leaky_relu':
@@ -30,11 +31,11 @@ def get_activation_func(activation_type):
 def get_normalizer(normalizer_type, train=True):
 
     if normalizer_type == 'batch_norm':
-        normalizer = tf_norm.batch_norm_with_train if train else \
-            tf_norm.batch_norm_without_train
+        normalizer = norm_util.batch_norm_with_train if train else \
+            norm_util.batch_norm_without_train
 
     elif normalizer_type == 'layer_norm':
-        normalizer = tf_norm.layer_norm
+        normalizer = norm_util.layer_norm
 
     elif normalizer_type == 'none':
         normalizer = tf.identity
@@ -63,7 +64,7 @@ def normc_initializer_func(std=1.0, axis=0, seed=1234):
 
 
 def weight_variable(shape, name, init_method=None, dtype=tf.float32,
-                    init_para=None, seed=1234, trainable=True):
+                    init_para=None, seed=1234, trainable=True, init_value=None):
     """ @brief:
             Initialize weights
         @input:
@@ -78,7 +79,10 @@ def weight_variable(shape, name, init_method=None, dtype=tf.float32,
     if init_method is None or init_method == 'zero':
         initializer = tf.zeros_initializer(shape, dtype=dtype)
 
-    if init_method == "normc":
+    if init_value is not None:
+        return tf.get_variable(init_value, dtype=dtype, name=name)
+
+    elif init_method == "normc":
         var = normc_initializer(
             shape, stddev=init_para['stddev'],
             seed=seed, dtype=dtype
@@ -229,7 +233,7 @@ class MLP(object):
 
     def __init__(self, dims, scope, train,
                  activation_type, normalizer_type, init_data,
-                 dtype=tf.float32):
+                 linear_last_layer = False, init_weights=None, dtype=tf.float32):
 
         self._scope = scope
         self._num_layer = len(dims) - 1  # the last one is the input dim
@@ -240,6 +244,91 @@ class MLP(object):
         self._activation_type = activation_type
         self._normalizer_type = normalizer_type
         self._init_data = init_data
+        self._init_weights = init_weights
+        self.linear_last_layer = linear_last_layer
+
+        # initialize variables
+        with tf.variable_scope(scope):
+            for ii in range(self._num_layer):
+                with tf.variable_scope("layer_{}".format(ii)):
+                    dim_in, dim_out = dims[ii], dims[ii + 1]
+
+                    if self._init_weights is not None:
+                        init_w, init_b = self._init_weights[ii]
+                    else:
+                        init_w, init_b = None, None
+
+                    self._w[ii] = weight_variable(
+                        shape=[dim_in, dim_out], name='w',
+                        init_method=self._init_data[ii]['w_init_method'],
+                        init_para=self._init_data[ii]['w_init_para'],
+                        dtype=dtype, trainable=self._train,
+                        init_value = init_w
+                    )
+
+                    self._b[ii] = weight_variable(
+                        shape=[dim_out], name='b',
+                        init_method=self._init_data[ii]['b_init_method'],
+                        init_para=self._init_data[ii]['b_init_para'],
+                        dtype=dtype, trainable=self._train,
+                        init_value = init_b
+                    )
+
+    def __call__(self, input_vec):
+        self._h = [None] * self._num_layer
+        self._input = input_vec
+
+        with tf.variable_scope(self._scope):
+            for ii in range(self._num_layer):
+                with tf.variable_scope("layer_{}".format(ii)):
+                    layer = input_vec if ii == 0 else self._h[ii - 1]
+                    self._h[ii] = tf.matmul(layer, self._w[ii]) + self._b[ii]
+
+                    if (ii == self._num_layer - 1) and self.linear_last_layer:
+                        continue
+
+                    else:
+                        if self._activation_type[ii] is not None:
+                            act_func = \
+                                get_activation_func(self._activation_type[ii])
+                            self._h[ii] = \
+                                act_func(self._h[ii], name='activation_' + str(ii))
+
+                    if self._normalizer_type[ii] is not None:
+                        normalizer = get_normalizer(self._normalizer_type[ii],
+                                                    train=self._train)
+                        self._h[ii] = \
+                            normalizer(self._h[ii], 'normalizar_' + str(ii))
+
+        return self._h[-1]
+
+class SparseMLP(object):
+    """ Multi Layer Perceptron (MLP)
+                Note: the number of layers is N
+        Input:
+                dims: a list of N+1 int, number of hidden units (last one is the
+                input dimension)
+                act_func: a list of N activation functions
+                add_bias: a boolean, indicates whether adding bias or not
+                scope: tf scope of the model
+    """
+
+    def __init__(self, dims, scope, train,
+                 activation_type, normalizer_type, init_data,
+                 linear_last_layer = False, dtype=tf.float32):
+
+        self._scope = scope
+        self._num_layer = len(dims) - 1  # the last one is the input dim
+        self._w = [None] * self._num_layer
+        self._b = [None] * self._num_layer
+
+        self._sparse_mask = [None] * self._num_layer
+        self._train = train
+
+        self._activation_type = activation_type
+        self._normalizer_type = normalizer_type
+        self._init_data = init_data
+        self.linear_last_layer = linear_last_layer
 
         # initialize variables
         with tf.variable_scope(scope):
@@ -252,6 +341,11 @@ class MLP(object):
                         init_method=self._init_data[ii]['w_init_method'],
                         init_para=self._init_data[ii]['w_init_para'],
                         dtype=dtype, trainable=self._train
+                    )
+
+                    self._sparse_mask[ii] = tf.placeholder(
+                        tf.float32, shape=[dim_in, dim_out],
+                        name="sp_mask"
                     )
 
                     self._b[ii] = weight_variable(
@@ -269,13 +363,17 @@ class MLP(object):
             for ii in range(self._num_layer):
                 with tf.variable_scope("layer_{}".format(ii)):
                     layer = input_vec if ii == 0 else self._h[ii - 1]
-                    self._h[ii] = tf.matmul(layer, self._w[ii]) + self._b[ii]
+                    self._h[ii] = tf.matmul(layer, self._w[ii] * self._sparse_mask[ii]) + self._b[ii]
 
-                    if self._activation_type[ii] is not None:
-                        act_func = \
-                            get_activation_func(self._activation_type[ii])
-                        self._h[ii] = \
-                            act_func(self._h[ii], name='activation_' + str(ii))
+                    if (ii == self._num_layer - 1) and self.linear_last_layer:
+                        continue
+
+                    else:
+                        if self._activation_type[ii] is not None:
+                            act_func = \
+                                get_activation_func(self._activation_type[ii])
+                            self._h[ii] = \
+                                act_func(self._h[ii], name='activation_' + str(ii))
 
                     if self._normalizer_type[ii] is not None:
                         normalizer = get_normalizer(self._normalizer_type[ii],
@@ -285,6 +383,103 @@ class MLP(object):
 
         return self._h[-1]
 
+
+class SparseMultitaskMLP(object):
+    """ Multi Layer Perceptron (MLP)
+                Note: the number of layers is N
+        Input:
+                dims: a list of N+1 int, number of hidden units (last one is the
+                input dimension)
+                act_func: a list of N activation functions
+                add_bias: a boolean, indicates whether adding bias or not
+                scope: tf scope of the model
+    """
+
+    def __init__(self, dims, scope, train,
+                 activation_type, normalizer_type, init_data,
+                 linear_last_layer = False, num_tasks = 1, dtype=tf.float32):
+
+        self._scope = scope
+        self._num_layer = len(dims) - 1  # the last one is the input dim
+        self._num_subtasks = num_tasks
+        self._v = [None] * self._num_layer
+        self._w = []
+        self._sparse_mask = []
+        for i in range(num_tasks):
+            self._w.append([])
+            self._sparse_mask.append([])
+        self._b = [None] * self._num_layer
+        self._train = train
+
+        self._activation_type = activation_type
+        self._normalizer_type = normalizer_type
+        self._init_data = init_data
+        self.linear_last_layer = linear_last_layer
+
+
+        # initialize variables
+        with tf.variable_scope(scope):
+            for ii in range(self._num_layer):
+                with tf.variable_scope("layer_{}".format(ii)):
+                    dim_in, dim_out = dims[ii], dims[ii + 1]
+
+                    self._v[ii] = weight_variable(
+                        shape=[dim_in, dim_out], name='v',
+                        init_method=self._init_data[ii]['w_init_method'],
+                        init_para=self._init_data[ii]['w_init_para'],
+                        dtype=dtype, trainable=self._train
+                    )
+
+                    for jj in range(num_tasks):
+                        self._sparse_mask[jj].append(weight_variable(
+                            shape=[dim_in, dim_out], name='sparse_mask_task{}'.format(jj),
+                            init_method='normc',
+                            init_para={'stddev': 1.0},
+                            dtype=dtype, trainable=self._train
+                        ))
+
+                        self._w[jj].append(tf.multiply(
+                            tf.sigmoid(self._sparse_mask[jj][ii]), self._v[ii],
+                            name='w_task{}'.format(jj)
+                        ))
+
+                    self._b[ii] = weight_variable(
+                        shape=[dim_out], name='b',
+                        init_method=self._init_data[ii]['b_init_method'],
+                        init_para=self._init_data[ii]['b_init_para'],
+                        dtype=dtype, trainable=self._train
+                    )
+
+    def __call__(self, input_vec):
+        self._h = []
+        for i in range(self._num_subtasks):
+            self._h.append([None] * self._num_layer)
+        self._input = input_vec
+
+        with tf.variable_scope(self._scope):
+            for ii in range(self._num_layer):
+                with tf.variable_scope("layer_{}".format(ii)):
+                    for jj in range(self._num_subtasks):
+                        layer = input_vec if ii == 0 else self._h[jj][ii - 1]
+                        self._h[jj][ii] = tf.matmul(layer, self._w[jj][ii]) + self._b[ii]
+
+                        if (ii == self._num_layer - 1) and self.linear_last_layer:
+                            continue
+
+                        else:
+                            if self._activation_type[ii] is not None:
+                                act_func = \
+                                    get_activation_func(self._activation_type[ii])
+                                self._h[jj][ii] = \
+                                    act_func(self._h[jj][ii], name='activation_' + str(ii))
+
+                        if self._normalizer_type[ii] is not None:
+                            normalizer = get_normalizer(self._normalizer_type[ii],
+                                                        train=self._train)
+                            self._h[jj][ii] = \
+                                normalizer(self._h[jj][ii], 'normalizer_' + str(ii))
+
+        return [self._h[ix][-1] for ix in range(len(self._h))]
 
 def flatten_feature(x):
     return tf.reshape(x, [-1, int(np.prod(x.get_shape().as_list()[1:]))])
@@ -316,3 +511,4 @@ def conv2d(x, num_filters, name, filter_size, stride,
         w_variable_list.append(w)
         b_variable_list.append(b)
         return tf.nn.conv2d(x, w, stride_shape, pad) + b
+

@@ -8,7 +8,6 @@ import numpy as np
 class replay_buffer(object):
 
     def __init__(self, use_buffer, buffer_size, rand_seed,
-                 maximum_dim, hierarchy_depth,
                  observation_size, action_size, save_reward=False):
 
         self._use_buffer = use_buffer
@@ -33,25 +32,16 @@ class replay_buffer(object):
                 dtype=np.float16
             ),
 
-            'goal': np.zeros(
-                [self._buffer_size, hierarchy_depth - 1,
-                 maximum_dim]
-            ),
-
-            'initial_goals': np.zeros(
-                [self._buffer_size, maximum_dim]
-            ),
-
             'rewards': np.zeros([reward_data_size], dtype=np.float16)
         }
 
         if action_size is None:
-            self._data['actions'] = np.zeros(
+            self._data['action'] = np.zeros(
                 [self._buffer_size], dtype=np.int16
             )
 
         else:
-            self._data['actions'] = np.zeros(
+            self._data['action'] = np.zeros(
                 [self._buffer_size, self._action_size], dtype=np.int16
             )
 
@@ -80,7 +70,6 @@ class replay_buffer(object):
                     new_data[key][self._buffer_size - self._current_id:]
 
         else:
-
             for key in self._data_key:
                 self._data[key][self._current_id:
                                 self._current_id + num_new_data] = \
@@ -328,11 +317,6 @@ class prioritized_recurrent_replay_buffer(prioritized_replay_buffer):
         #            return_dict['initial_goals'],
         #            return_dict['initial_goals'][:,0][:, np.newaxis], axis=1
         #        )
-        return_dict['goal'] = np.append(
-            return_dict['goal'],
-            return_dict['goal'][:, 0][:, np.newaxis], axis=1
-        )
-
         for key in return_dict:
             return_dict[key] = np.reshape(return_dict[key],
                                           (-1, *return_dict[key].shape[2:])
@@ -343,45 +327,10 @@ class prioritized_recurrent_replay_buffer(prioritized_replay_buffer):
 
 def build_replay_buffer(args, observation_size, action_size,
                         save_reward=True):
-    hierarchy_depth = args.maximum_hierarchy_depth
-    if args.use_fixed_manager:
-        maximum_dim = observation_size
 
-    elif not (args.use_state_embedding
-              or args.use_state_preprocessing):
-        maximum_dim = observation_size
+    return replay_buffer(args.use_replay_buffer, args.replay_buffer_size,
+        args.seed, observation_size, action_size, save_reward)
 
-    else:
-        maximum_dim = args.goals_dim_min * (
-                args.goals_dim_increment ** (
-                args.maximum_hierarchy_depth - 1
-        )
-        )
-
-    if args.replay_buffer_type == 'basic':
-        return replay_buffer(args.use_replay_buffer, args.replay_buffer_size,
-                             args.seed, maximum_dim, hierarchy_depth,
-                             hierarchy_depth, observation_size,
-                             action_size, save_reward
-                             )
-
-    elif args.replay_buffer_type == 'prioritized':
-        return prioritized_replay_buffer(args.buffer_priority_alpha,
-                                         args.use_replay_buffer, args.replay_buffer_size,
-                                         args.seed, maximum_dim, hierarchy_depth, observation_size,
-                                         action_size, save_reward
-                                         )
-
-    elif args.replay_buffer_type == 'prioritized_by_episode':
-        return prioritized_recurrent_replay_buffer(
-            args.episode_length, args.buffer_priority_alpha,
-            args.use_replay_buffer, args.replay_buffer_size,
-            args.seed, maximum_dim, hierarchy_depth, observation_size,
-            action_size, save_reward
-        )
-
-    else:
-        raise ValueError("Unsupported replay buffer type")
 
 
 class DummyEpisodicBuffer(object):

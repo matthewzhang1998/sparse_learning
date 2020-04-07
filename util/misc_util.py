@@ -12,7 +12,6 @@ def get_return(x, gamma):
     assert x.ndim >= 1
     return scipy.signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
 
-
 def cat_sample(prob_nk, seed=1234):
 
     npr = np.random.RandomState(seed)

@@ -8,14 +8,17 @@ Created on Sun Aug 12 15:27:54 2018
 CREDIT TO TINGWU WANG FOR THIS CODE
 '''
 
+import os
+from main.baseline_main import get_dir
+
 import numpy as np
 import tensorflow as tf
 import multiprocessing
 import time
 import copy
 from util import logger, parallel_util, init_path
-from envs import env_register
-from envs.env_utils import play_episode_with_env
+from env import env_register
+from env.env_util import play_episode_with_env
 
 
 class Worker(multiprocessing.Process):
@@ -23,7 +26,7 @@ class Worker(multiprocessing.Process):
     def __init__(self, params, observation_size, action_size,
                  action_distribution,
                  network_type, task_queue, result_queue, worker_id,
-                 name_scope='worker'):
+                 name_scope='worker', subtask=None):
 
         # the multiprocessing initialization
         multiprocessing.Process.__init__(self)
@@ -45,6 +48,8 @@ class Worker(multiprocessing.Process):
         self._environments_cache = []
         self._episodes_so_far = 0
 
+        self.subtask = subtask
+
         logger.info('Worker {} online'.format(self._worker_id))
         self._base_dir = init_path.get_base_dir()
         self._build_env()
@@ -58,6 +63,7 @@ class Worker(multiprocessing.Process):
 
         with self._session as sess:
             self._build_model()
+
             while True:
                 next_task = self._task_queue.get(block=True)
 
@@ -85,6 +91,11 @@ class Worker(multiprocessing.Process):
                     logger.info("kill message for worker")
                     self._task_queue.task_done()
                     break
+
+                elif next_task[0] == parallel_util.AGENT_RENDER:
+                    self._num_envs_required = 1
+                    self._render(next_task[1]['it'], next_task[1]['save_loc'])
+                    self._task_queue.task_done()
                 else:
                     logger.error('Invalid task type {}'.format(next_task[0]))
             return
@@ -100,8 +111,8 @@ class Worker(multiprocessing.Process):
             self._action_distribution
         )
 
-        with tf.variable_scope(name_scope):
-            self._network.build_model()
+        self._network.build_model()
+        self._network.build_loss()
         self._session.run(tf.global_variables_initializer())
 
     def _build_session(self):
@@ -117,7 +128,8 @@ class Worker(multiprocessing.Process):
                     self.params.task, self._npr.randint(0, 9999),
                     self.params.episode_length,
                     {'allow_monitor': self.params.monitor \
-                                      and self._worker_id == 0}
+                                      and self._worker_id == 0,
+                     'subtask': self.subtask}
                 )
                 _env.reset()
 
@@ -129,7 +141,8 @@ class Worker(multiprocessing.Process):
                     self.params.task, self._npr.randint(0, 9999),
                     self.params.episode_length,
                     {'allow_monitor': self.params.monitor \
-                                      and self._worker_id == 0}
+                                      and self._worker_id == 0,
+                     'subtask': self.subtask}
                 )
                 _env.reset()
                 self._envs.append(_env)
@@ -170,6 +183,18 @@ class Worker(multiprocessing.Process):
 
         # call the policy network
         return self._network.act(data_dict, control_info)
+
+    def _render_act(self, obs):
+        act = self._network.act({'start_state': obs})
+
+        return act['action'][0]
+
+    def _render(self, it, save_loc):
+        self._build_env()
+        print("____RENDERING WORKER____")
+
+        self._envs[0].visualize_policy_offscreen(self._render_act,
+            horizon=self.params.episode_length, it=it, save_loc=save_loc)
 
     def _set_weights(self, network_weights):
         self._network.set_weights(network_weights)

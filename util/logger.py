@@ -12,6 +12,8 @@ import sys
 import os
 import datetime
 from termcolor import colored
+from tensorboard_logger import configure
+import re
 
 __all__ = ['set_file_handler']  # the actual worker is the '_logger'
 
@@ -68,10 +70,11 @@ class GLOBAL_PATH(object):
 
 
 PATH = GLOBAL_PATH()
-
+TBL_PATH = ''
 
 # set the file output handler
 def set_file_handler(path=None, prefix='', time_str=''):
+    global TBL_PATH
     if time_str == '':
         file_name = prefix + \
                     datetime.datetime.now().strftime("%A_%d_%B_%Y_%I:%M%p") + '.log'
@@ -81,18 +84,17 @@ def set_file_handler(path=None, prefix='', time_str=''):
     if path is None:
         mod = sys.modules['__main__']
         path = os.path.join(os.path.abspath(mod.__file__), '..', '..', 'log')
-    else:
-        path = os.path.join(path, 'log')
     path = os.path.abspath(path)
 
-    path = os.path.join(path, file_name)
     if not os.path.exists(path):
         os.makedirs(path)
 
     PATH._set_path(path)
     path = os.path.join(path, file_name)
-    from tensorboard_logger import configure
+
     configure(path)
+
+    TBL_PATH = path
 
     file_handler = logging.FileHandler(
         filename=os.path.join(path, 'logger'), encoding='utf-8', mode='w')
@@ -102,9 +104,16 @@ def set_file_handler(path=None, prefix='', time_str=''):
     _logger.info('Log file set to {}'.format(path))
     return
 
-
 def _get_path():
     return PATH._get_path()
+
+def get_tbl_path():
+    return TBL_PATH
+
+def set_tbl_index(ix):
+    path = get_tbl_path()
+    path = os.path.splitext(path)[0] + str(ix) + '.log'
+    configure(path)
 
 
 _LOGGING_METHOD = ['info', 'warning', 'error', 'critical',

@@ -4,16 +4,17 @@ import os.path as osp
 import tensorflow as tf
 from util import parallel_util, whitening_util, \
     replay_buffer, logger, misc_util, init_path
-from envs import env_register
+from env import env_register
 
 
 class Trainer(multiprocessing.Process):
 
     def __init__(self, params, network_type, task_queue, result_queue,
-                 name_scope='trainer'):
+                 name_scope='trainer', init_weights=None, path=None):
         multiprocessing.Process.__init__(self)
         self.params = params
         self._name_scope = name_scope
+        self.path=path
 
         # the base agent
         self._base_path = init_path.get_abs_base_dir()
@@ -26,6 +27,7 @@ class Trainer(multiprocessing.Process):
         self._task_queue = task_queue
         self._result_queue = result_queue
         self._network_type = network_type
+        self.init_weights = init_weights
 
     def run(self):
         self._set_io_size()
@@ -41,8 +43,6 @@ class Trainer(multiprocessing.Process):
         while True:
             next_task = self._task_queue.get()
 
-            print(next_task)
-
             if next_task[0] is None or next_task[0] == parallel_util.END_SIGNAL:
                 # kill the learner
                 self._task_queue.task_done()
@@ -51,13 +51,20 @@ class Trainer(multiprocessing.Process):
             elif next_task[0] == parallel_util.START_SIGNAL:
                 # get network weights
                 self._task_queue.task_done()
-                self._result_queue.put(self._get_weights())
+                weights = self._get_weights()
+
+                self._result_queue.put(weights)
 
             elif next_task[0] == parallel_util.RESET_SIGNAL:
                 self._task_queue.task_done()
                 self._init_whitening_stats()
                 self._timesteps_so_far = 0
                 self._iteration = 0
+
+            elif next_task[0] == parallel_util.FETCH_SPARSE_WEIGHTS:
+                self._task_queue.task_done()
+                weights = self._network.get_sparse_weights()
+                self._result_queue.put(weights)
 
             elif next_task[0] == parallel_util.SAVE_SIGNAL:
                 _save_root = next_task[1]['net']
@@ -80,12 +87,24 @@ class Trainer(multiprocessing.Process):
                 self._task_queue.task_done()
 
                 self._iteration += 1
-                return_data = {
-                    'network_weights': self._get_weights(),
-                    'stats': stats,
-                    'totalsteps': self._timesteps_so_far,
-                    'iteration': self._iteration
-                }
+
+                if self.params.separate_train:
+                    return_data = {
+                        'network_weights': self._get_weights(),
+                        'stats': stats[i],
+                        'totalsteps': self._timesteps_so_far,
+                        'iteration': self._iteration
+                    }
+
+                else:
+                    weights = self._get_weights()
+                    return_data = [{
+                        'network_weights': weights[i],
+                        'stats': stats[i],
+                        'totalsteps': self._timesteps_so_far,
+                        'iteration': self._iteration
+                    } for i in range(self.params.num_subtasks)]
+
                 self._result_queue.put(return_data)
 
     def get_experiment_name(self):
@@ -101,10 +120,13 @@ class Trainer(multiprocessing.Process):
         self._network = self._network_type(
             self.params, self._session, self._name_scope,
             self._observation_size, self._action_size,
-            self._action_distribution
+            self._action_distribution,
+            init_weights = self.init_weights, path=self.path
         )
         self._network.build_model()
         self._session.run(tf.global_variables_initializer())
+
+        self._network.build_writer()
         self._saver = tf.train.Saver()
 
     def _set_io_size(self):
@@ -130,6 +152,10 @@ class Trainer(multiprocessing.Process):
     def _update_whitening_stats(self, rollout_data,
                                 key_list=['state', 'diff_state']):
         # collect the info
+        rollout_data = [i_ep for data in rollout_data for i_ep in data]
+        # rollout_data is list of list of dicts
+        # -> list of dicts needed for update
+
         for key in key_list:
             whitening_util.update_whitening_stats(
                 self._whitening_stats, rollout_data, key
@@ -148,7 +174,7 @@ class Trainer(multiprocessing.Process):
         for i_episode in rollout_data:
             i_episode["returns"] = \
                 misc_util.get_return(i_episode["rewards"],
-                                      self.params.gamma_max)
+                                      self.params.gamma)
 
         for key in self._network.required_keys:
             training_data[key] = np.concatenate(
@@ -171,7 +197,7 @@ class Trainer(multiprocessing.Process):
         training_data['rollout_data'] = rollout_data
 
         # update timesteps so far
-        self._timesteps_so_far += len(training_data['actions'])
+        self._timesteps_so_far += len(training_data['action'])
         return training_data
 
     def _restore_all(self):
@@ -187,19 +213,40 @@ class Trainer(multiprocessing.Process):
 
         return weights
 
-    def _update_parameters(self, rollout_data):
-        self._update_whitening_stats(rollout_data)
-        training_data = self._preprocess_data(rollout_data)
-        training_stats = {'avg_reward': training_data['avg_reward']}
+    def _update_parameters(self, rollout_data, *args):
+        if self.params.separate_train:
+            self._update_whitening_stats(rollout_data)
+            training_data = self._preprocess_data(rollout_data)
+            training_stats = {'avg_reward': training_data['avg_reward']}
 
-        # train the policy
-        stats_dictionary, data_dictionary = \
-            self._network.train(
-                training_data,  self._replay_buffer
-            )
+            # train the policy
+            stats_dictionary, data_dictionary = \
+                self._network.train(
+                    training_data,  self._replay_buffer
+                )
 
-        training_stats.update(stats_dictionary)
+            training_stats.update(stats_dictionary)
 
-        self._replay_buffer.add_data(data_dictionary)
+            self._replay_buffer.add_data(data_dictionary)
+
+        else:
+            training_stats, training_data = [], []
+
+            self._update_whitening_stats(rollout_data)
+
+            for i in range(self.params.num_subtasks):
+                training_data.append(self._preprocess_data(rollout_data[i]))
+                training_stats.append({'avg_reward': training_data[i]['avg_reward']})
+
+                # train the policy
+            stats_dictionary, data_dictionary = \
+                self._network.train(
+                    training_data, self._replay_buffer
+                )
+
+            for i in range(self.params.num_subtasks):
+                training_stats[i].update(stats_dictionary[i])
+
+                self._replay_buffer.add_data(data_dictionary[i])
 
         return training_stats

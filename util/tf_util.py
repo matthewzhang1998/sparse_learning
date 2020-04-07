@@ -75,10 +75,13 @@ def numel(x):
     return np.prod(var_shape(x))
 
 
-def l2_loss(var_list):
+def l2_loss(var_list, apply_sigmoid=False):
     l2_norm = tf.constant(0.)
     for var in var_list:
-        l2_norm += tf.nn.l2_loss(var)
+        if apply_sigmoid:
+            l2_norm += tf.nn.l2_loss(var)
+        else:
+            l2_norm += tf.nn.l2_loss(tf.sigmoid(var))
     return l2_norm
 
 
@@ -130,13 +133,15 @@ class get_network_weights(object):
             call this function to get the weights in the policy network
     """
 
-    def __init__(self, session, var_list, base_namescope):
+    def __init__(self, session, var_list, base_namescope, strip_end = ''):
         self._session = session
         self._base_namescope = base_namescope
         # self._op is a dict, note that the base namescope is removed, as the
         # worker and the trainer has different base_namescope
+        self.strip_end = strip_end
+
         self._op = {
-            var.name.replace(self._base_namescope, ''): var
+            var.name.replace(self._base_namescope, '').replace(strip_end, ''): var
             for var in var_list
         }
 
@@ -179,6 +184,18 @@ class set_network_weights(object):
 
         self._session.run(self._assigns, feed_dict)
 
+def correlation_loss(a, iter, apply_sigmoid=False):
+    if len(iter) == 0:
+        return 0
+
+    loss = tf.constant(0.)
+    for ix in range(len(a)):
+        tensor = a[ix]
+
+        for other in iter:
+            loss += tf.reduce_mean(tf.sigmoid(tensor) * tf.sigmoid(other[ix]))
+
+    return loss
 
 def xavier_initializer(self, shape):
     dim_sum = np.sum(shape)
