@@ -3,13 +3,11 @@ import numpy as np
 from policy import base_policy
 from util import tf_util, network_util
 
-class PPOPolicy(base_policy.BasePolicy):
+class SparsePPOPolicy(base_policy.BasePolicy):
     def __init__(self, params, session, scope,
-                 observation_size, action_size, *args, init_weights=None,**kwargs):
-        super(PPOPolicy, self).__init__(params, session,
+                 observation_size, action_size, *args, **kwargs):
+        super(SparsePPOPolicy, self).__init__(params, session,
             scope, observation_size, action_size)
-
-        self.init_weights = init_weights
 
         self.required_keys = ['start_state', 'end_state', 'action', 'rewards', 'returns',
                                 'old_action_dist_mu', 'old_action_dist_logstd']
@@ -49,20 +47,15 @@ class PPOPolicy(base_policy.BasePolicy):
                      'b_init_method': 'constant', 'b_init_para': {'val': 0.0}}
                 )
             init_data[-1]['w_init_para']['stddev'] = 0.01  # the output layer std
+            self._MLP = network_util.SparseMLP(
+                dims=network_shape, scope='policy_mlp', train=True,
+                activation_type=act_type, normalizer_type=norm_type,
+                init_data=init_data, linear_last_layer=True
+            )
+            self._input_ph['policy_sparse_masks'] = self._MLP._sparse_mask
+            self._tensor['policy_weights'] = self._MLP._w
+            self._tensor['policy_b'] = self._MLP._b
 
-            if self.init_weights is not None:
-                self._MLP = network_util.MLP(
-                    dims=network_shape, scope='policy_mlp', train=True,
-                    activation_type=act_type, normalizer_type=norm_type,
-                    init_data=init_data, linear_last_layer=True,
-                    init_weights = self.init_weights['policy']
-                )
-            else:
-                self._MLP = network_util.MLP(
-                    dims=network_shape, scope='policy_mlp', train=True,
-                    activation_type=act_type, normalizer_type=norm_type,
-                    init_data=init_data, linear_last_layer=True
-                )
             # the output policy of the network
             self._tensor['action_dist_mu'] = self._MLP(self._tensor['net_input'])
             self._tensor['action_logstd'] = tf.Variable(
@@ -84,6 +77,8 @@ class PPOPolicy(base_policy.BasePolicy):
             self._set_var_list()
             self._build_ppo_loss_preprocess()
             self._build_ppo_loss()
+
+            self._init_sparse_params()
 
     def _build_value_network_and_loss(self):
         # build the placeholder for training the value function
@@ -107,20 +102,16 @@ class PPOPolicy(base_policy.BasePolicy):
                 {'w_init_method': 'normc', 'w_init_para': {'stddev': 1.0},
                  'b_init_method': 'constant', 'b_init_para': {'val': 0.0}}
             )
+        self._value_MLP = network_util.SparseMLP(
+            dims=network_shape, scope='value_mlp', train=True,
+            activation_type=act_type, normalizer_type=norm_type,
+            init_data=init_data, linear_last_layer=True
+        )
 
-        if self.init_weights is not None:
-            self._value_MLP = network_util.MLP(
-                dims=network_shape, scope='value_mlp', train=True,
-                activation_type=act_type, normalizer_type=norm_type,
-                init_data=init_data, linear_last_layer=True,
-                init_weights = self.init_weights['value']
-            )
-        else:
-            self._value_MLP = network_util.MLP(
-                dims=network_shape, scope='value_mlp', train=True,
-                activation_type=act_type, normalizer_type=norm_type,
-                init_data=init_data, linear_last_layer=True
-            )
+        self._input_ph['value_sparse_masks'] = self._value_MLP._sparse_mask
+        self._tensor['value_weights'] = self._value_MLP._w
+        self._tensor['value_b'] = self._value_MLP._b
+
         self._tensor['pred_value'] = self._value_MLP(self._tensor['net_input'])
         # build the loss for the value network
 #        self._tensor['val_clipped'] = \
@@ -261,6 +252,8 @@ class PPOPolicy(base_policy.BasePolicy):
         stats = {'surr_loss': [], 'entropy': [], 'kl': [], 'vf_loss': []}
         update_kl_mean = -.1
 
+        self._iters_so_far += 1
+
         self._timesteps_so_far += len(data_dict['start_state'])
 
         for epoch in range(max(self.params.policy_epochs,
@@ -275,11 +268,13 @@ class PPOPolicy(base_policy.BasePolicy):
                 start = start * minibatch_size
                 end = min(start + minibatch_size, total_batch_len)
                 batch_inds = total_batch_inds[start:end]
-                feed_dict = {
+                feed_dict={
                     self._input_ph[key]: data_dict[key][batch_inds]
                     for key in ['start_state', 'action', 'advantage',
                                 'old_action_dist_mu', 'old_action_dist_logstd']
                 }
+                feed_dict = {**self._default_policy_masks,
+                       **self._default_value_masks, ** feed_dict}
 
                 feed_dict[self._input_ph['batch_size']] = \
                     np.array(float(end - start))
@@ -323,11 +318,14 @@ class PPOPolicy(base_policy.BasePolicy):
                 break
 
         # run final feed_dict with whole batch
-        feed_dict = {
+        feed_dict={
             self._input_ph[key]: data_dict[key]
             for key in ['start_state', 'action', 'advantage',
                         'old_action_dist_mu', 'old_action_dist_logstd']
         }
+
+        feed_dict = {**self._default_policy_masks,
+                       **self._default_value_masks, **feed_dict}
         feed_dict[self._input_ph['batch_size']] = \
             np.array(float(total_batch_len))
 
@@ -381,10 +379,14 @@ class PPOPolicy(base_policy.BasePolicy):
                 0.0
             )
 
+        if self._iters_so_far % self.params.sparsification_iter == 0:
+            self.update_sparsify(self._iters_so_far)
+
     def act(self, data_dict, *params):
         action_dist_mu, action_dist_logstd = self._session.run(
             [self._tensor['action_dist_mu'], self._tensor['action_dist_logstd']],
-            feed_dict={self._input_ph['start_state']:
+            feed_dict={**self._default_policy_masks,
+                       **self._default_value_masks, self._input_ph['start_state']:
                        np.reshape(data_dict['start_state'],
                                   [-1, self._observation_size])}
         )
@@ -415,7 +417,7 @@ class PPOPolicy(base_policy.BasePolicy):
                     delta = data_dict['returns'][i_step + start_id] \
                             + self.params.gamma * \
                             data_dict['value'][i_step + start_id + 1] \
-                            #- data_dict['value'][i_step + start_id]
+                            - data_dict['value'][i_step + start_id]
                     data_dict['advantage'][i_step + start_id] = \
                         delta + self.params.gamma * self.params.gae_lam \
                         * data_dict['advantage'][i_step + start_id + 1]
@@ -434,8 +436,69 @@ class PPOPolicy(base_policy.BasePolicy):
         data_dict['advantage'] /= (data_dict['advantage'].std() + 1e-8)
         data_dict['advantage'] = np.reshape(data_dict['advantage'], [-1, 1])
 
+    def _init_sparse_params(self):
+        self._default_policy_masks = {}
+        for x in self._input_ph['policy_sparse_masks']:
+            self._default_policy_masks[x] = np.ones(x.get_shape().as_list())
+
+        self._default_value_masks = {}
+        for y in self._input_ph['value_sparse_masks']:
+            self._default_value_masks[y] = np.ones(y.get_shape().as_list())
+
+    def update_sparsify(self, tstep):
+        policy_weights = self._session.run(self._tensor['policy_weights'])
+        value_weights = self._session.run(self._tensor['value_weights'])
+
+        sparse_percent = max(1 - (tstep // self.params.sparsification_iter) * \
+            self.params.sparsification_percent, self.params.sparsification_floor)
+
+        x = self._input_ph['policy_sparse_masks']
+        y = self._input_ph['value_sparse_masks']
+
+        for i in range(len(policy_weights)):
+            size = policy_weights[i].size
+            inds = np.unravel_index(
+                np.argpartition(np.abs(policy_weights[i] * self._default_policy_masks[x[i]]),
+                    int(size * sparse_percent), axis=None)[:int(size * sparse_percent)],
+                policy_weights[i].shape
+            )
+
+            proto = np.zeros_like(policy_weights[i])
+            proto[inds] = 1
+
+            self._default_policy_masks[x[i]] = proto
+
+        for i in range(len(value_weights)):
+            size = value_weights[i].size
+            inds = np.unravel_index(
+                np.argpartition(np.abs(value_weights[i] * self._default_value_masks[y[i]]),
+                    int(size * sparse_percent), axis=None)[:int(size * sparse_percent)],
+                value_weights[i].shape
+            )
+
+            proto = np.zeros_like(value_weights[i])
+            proto[inds] = 1
+
+            self._default_value_masks[y[i]] = proto
+
+
     def get_weights(self):
-        return self._get_network_weights()
+        weights = self._get_network_weights()
+        for ix in range(len(self._tensor['policy_weights'])):
+            var = self._tensor['policy_weights'][ix]
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+            weights[name] = weights[name] * \
+                self._default_policy_masks[self._input_ph['policy_sparse_masks'][ix]]
+
+        for jx in range(len(self._tensor['value_weights'])):
+            var = self._tensor['value_weights'][jx]
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+            weights[name] = weights[name] * \
+                self._default_value_masks[self._input_ph['value_sparse_masks'][jx]]
+
+        return weights
 
     def set_weights(self, weight_dict):
         return self._set_network_weights(weight_dict)
@@ -443,5 +506,27 @@ class PPOPolicy(base_policy.BasePolicy):
     def value_pred(self, data_dict):
         return self._session.run(
             self._tensor['pred_value'],
-            feed_dict={self._input_ph['start_state']: data_dict['end_state']}
+            feed_dict={**self._default_policy_masks,
+                       **self._default_value_masks,
+                        self._input_ph['start_state']: data_dict['end_state']}
         )
+
+    def get_sparse_weights(self):
+        policy_weights = self._session.run(self._tensor['policy_weights'])
+        value_weights = self._session.run(self._tensor['value_weights'])
+        policy_b = self._session.run(self._tensor['policy_b'])
+        value_b = self._session.run(self._tensor['value_b'])
+
+        policy_return = []
+        value_return = []
+        for i in range(len(self._tensor['policy_weights'])):
+            sparse_ix = self._default_policy_masks[self._input_ph['policy_sparse_masks'][i]]
+            w = policy_weights[i] * sparse_ix
+            policy_return.append((w, policy_b[i]))
+
+        for i in range(len(self._tensor['value_weights'])):
+            sparse_ix = self._default_value_masks[self._input_ph['value_sparse_masks'][i]]
+            w = value_weights[i] * sparse_ix
+            value_return.append((w, value_b[i]))
+
+        return policy_return, value_return

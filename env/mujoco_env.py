@@ -7,6 +7,8 @@ from os import path
 import gym
 import time as timer
 
+import imageio
+
 try:
     import mujoco_py
     from mujoco_py import load_model_from_path, MjSim, MjViewer
@@ -42,15 +44,18 @@ class MujocoEnv(gym.Env):
 
         self.init_qpos = self.data.qpos.ravel().copy()
         self.init_qvel = self.data.qvel.ravel().copy()
-        observation, _reward, done, _info = self._step(np.zeros(self.model.nu))
-        assert not done
-        self.obs_dim = np.sum([o.size for o in observation]) if type(observation) is tuple else observation.size
+
+        # Why is this here? Causes errors
+        #observation, _reward, done, _info = self._step(np.zeros(self.model.nu))
+        #assert not done
+        #self.obs_dim = np.sum([o.size for o in observation]) if type(observation) is tuple else observation.size
 
         bounds = self.model.actuator_ctrlrange.copy()
         low = bounds[:, 0]
         high = bounds[:, 1]
         self.action_space = spaces.Box(low, high)
 
+        # annoying should replace
         high = np.inf*np.ones(self.obs_dim)
         low = -high
         self.observation_space = spaces.Box(low, high)
@@ -58,7 +63,7 @@ class MujocoEnv(gym.Env):
         self._seed(self._rand_seed)
 
     def _seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(self._seed)
+        self.np_random, seed = seeding.np_random(self._rand_seed)
         return [seed]
 
     # methods to override:
@@ -161,27 +166,32 @@ class MujocoEnv(gym.Env):
                                    num_episodes=1,
                                    frame_size=(640,480),
                                    mode='exploration',
-                                   save_loc='/tmp/',
+                                   save_loc='./tmp/',
                                    filename='newvid',
+                                   it = 0,
                                    camera_name=None):
-        import skvideo.io
+
         for ep in range(num_episodes):
             print("Episode %d: rendering offline " % ep, end='', flush=True)
-            o = self.reset()
+            o, *_ = self.reset()
             d = False
             t = 0
             arrs = []
             t0 = timer.time()
             while t < horizon and d is False:
-                a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
+                a = policy(o)
                 o, r, d, _ = self.step(a)
                 t = t+1
                 curr_frame = self.sim.render(width=frame_size[0], height=frame_size[1],
                                              mode='offscreen', camera_name=camera_name, device_id=0)
                 arrs.append(curr_frame[::-1,:,:])
                 print(t, end=', ', flush=True)
-            file_name = save_loc + filename + str(ep) + ".mp4"
-            skvideo.io.vwrite( file_name, np.asarray(arrs))
+            file_name = save_loc + filename + str(ep) + str(it)+ ".mp4"
+
+            if not os.path.exists(save_loc):
+                os.makedirs(save_loc)
+
+            imageio.mimwrite(file_name, np.asarray(arrs), fps=10.0)
             print("saved", file_name)
             t1 = timer.time()
             print("time taken = %f"% (t1-t0))

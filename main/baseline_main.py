@@ -18,6 +18,7 @@ from runner import ppo_runner
 from runner.worker import base_worker
 from policy import ppo_policy
 from util import init_path
+import tensorboard_logger
 
 import multiprocessing
 import time
@@ -33,7 +34,6 @@ def get_dir(base_path):
     print(osp.join(os.getcwd() + path))
     sys.stdout.flush()
 
-    os.makedirs(path)
     return path
 
 def make_trainer(trainer, network_type, params, scope="trainer"):
@@ -55,12 +55,12 @@ def make_trainer(trainer, network_type, params, scope="trainer"):
     return trainer_tasks, trainer_results, trainer_agent, init_weights
 
 
-def make_sampler(sampler, worker_type, network_type, params):
-    sampler_agent = sampler.sampler(params, worker_type, network_type)
+def make_sampler(sampler, worker_type, network_type, params, subtask=None):
+    sampler_agent = sampler.Sampler(params, worker_type, network_type, subtask=None)
     return sampler_agent
 
 
-def log_results(results, timer_dict, start_timesteps=0):
+def log_results(results, timer_dict, start_timesteps=0, tb_logger=None):
     logger.info("-" * 15 + " Iteration %d " % results['iteration'] + "-" * 15)
 
     for i_id in range(len(timer_dict) - 1):
@@ -73,72 +73,49 @@ def log_results(results, timer_dict, start_timesteps=0):
     logger.info("{} total steps have happened".format(results['totalsteps']))
 
     # the stats
-    from tensorboard_logger import log_value
     for key in results['stats']:
         logger.info("[{}]: {}".format(key, results['stats'][key]))
         if results['stats'][key] is not None:
-            log_value(key, results['stats'][key], start_timesteps +
-                      results['totalsteps'])
-
-
-def train(trainer, sampler, worker, dynamics, policy, reward, params=None):
-    logger.info('Training starts at {}'.format(init_path.get_abs_base_dir()))
-    network_type = {'policy': policy, 'dynamics': dynamics, 'reward': reward}
-
-    # make the trainer and sampler
-    sampler_agent = make_sampler(sampler, worker, network_type, params)
-    trainer_tasks, trainer_results, trainer_agent, init_weights = \
-        make_trainer(trainer, network_type, params)
-    sampler_agent.set_weights(init_weights)
-
-    timer_dict = OrderedDict()
-    timer_dict['Program Start'] = time.time()
-    totalsteps = 0
-    current_iteration = 0
-
-    while True:
-        timer_dict['** Program Total Time **'] = time.time()
-
-        rollout_data = sampler_agent._rollout_with_workers()
-
-        timer_dict['Generate Rollout'] = time.time()
-
-        # step 2: train the weights for dynamics and policy network
-        training_info = {}
-        trainer_tasks.put(
-            (parallel_util.TRAIN_SIGNAL,
-             {'data': rollout_data['data'], 'training_info': training_info})
-        )
-        trainer_tasks.join()
-        training_return = trainer_results.get()
-        timer_dict['Train Weights'] = time.time()
-
-        # step 4: update the weights
-        sampler_agent.set_weights(training_return['network_weights'])
-        timer_dict['Assign Weights'] = time.time()
-
-        # log and print the results
-        log_results(training_return, timer_dict)
-
-        if totalsteps > params.max_timesteps:
-            break
-        else:
-            current_iteration += 1
-
-    # end of training
-    sampler_agent.end()
-    trainer_tasks.put((parallel_util.END_SIGNAL, None))
-
-
+            if tb_logger is None:
+                log_value(key, results['stats'][key], start_timesteps +
+                          results['totalsteps'])
+            else:
+                tb_logger.log_value(key, results['stats'][key], start_timesteps +
+                    results['totalsteps'])
 
 def train(trainer, sampler, worker, network_type, params=None):
     logger.info('Training starts at {}'.format(init_path.get_abs_base_dir()))
 
+    path = logger.get_tbl_path()
+
+    save_loc = get_dir(params.render_save_loc)
+    tb_logger = []
+    for i in range(params.num_subtasks):
+        os.makedirs(save_loc + '/' + str(i))
+        tb_logger.append(tensorboard_logger.Logger(
+            os.path.splitext(path)[0] + str(i) + '.log'
+        ))
+
     # make the trainer and sampler
-    sampler_agent = make_sampler(sampler, worker, network_type, params)
-    trainer_tasks, trainer_results, trainer_agent, init_weights = \
-        make_trainer(trainer, network_type, params)
-    sampler_agent.set_weights(init_weights)
+
+    sampler_agent = []
+    trainer_tasks = []
+    trainer_results = []
+    trainer_agent = []
+    init_weights = []
+
+    for i in range(params.num_subtasks):
+        sampler_agent.append(make_sampler(sampler, worker, network_type, params, subtask=i))
+        tasks, results, agent, weights = \
+            make_trainer(trainer, network_type, params)
+
+        trainer_tasks.append(tasks)
+        trainer_results.append(results)
+        trainer_agent.append(agent)
+        init_weights.append(weights)
+
+    for i in range(params.num_subtasks):
+        sampler_agent[i].set_weights(init_weights[i])
 
     timer_dict = OrderedDict()
     timer_dict['Program Start'] = time.time()
@@ -148,71 +125,81 @@ def train(trainer, sampler, worker, network_type, params=None):
         timer_dict['** Program Total Time **'] = time.time()
 
         # step 1: collect rollout data
-        rollout_data = \
-            sampler_agent._rollout_with_workers()
+        rollout_data = []
+        for i in range(params.num_subtasks):
+            rollout_data.append(
+                sampler_agent[i]._rollout_with_workers())
 
         timer_dict['Generate Rollout'] = time.time()
 
         # step 2: train the weights for dynamics and policy network
         training_info = {}
 
-        if params.pretrain_vae and current_iteration < params.pretrain_iterations:
-            training_info['train_net'] = 'vae'
+        for i in range(params.num_subtasks):
+            trainer_tasks[i].put(
+                (parallel_util.TRAIN_SIGNAL,
+                 {'data': rollout_data[i]['data'], 'training_info': training_info})
+            )
 
-        elif params.decoupled_managers:
-            if (current_iteration % \
-                (params.manager_updates + params.actor_updates)) \
-                < params.manager_updates:
-                training_info['train_net'] = 'manager'
+        for i in range(params.num_subtasks):
+            trainer_tasks[i].join()
 
-            else:
-                training_info['train_net'] = 'actor'
+        training_return = []
+        for i in range(params.num_subtasks):
+            training_return.append(trainer_results[i].get())
 
-        trainer_tasks.put(
-            (parallel_util.TRAIN_SIGNAL,
-             {'data': rollout_data['data'], 'training_info': training_info})
-        )
-        trainer_tasks.join()
-        training_return = trainer_results.get()
         timer_dict['Train Weights'] = time.time()
 
+        if current_iteration % params.render_iter == 0:
+            for i in range(params.num_subtasks):
+                print("_____RENDERING_____")
+                sampler_agent[i].render(current_iteration, save_loc + '/' + str(i))
+
         # step 4: update the weights
-        sampler_agent.set_weights(training_return['network_weights'])
+        for i in range(params.num_subtasks):
+            sampler_agent[i].set_weights(training_return[i]['network_weights'])
         timer_dict['Assign Weights'] = time.time()
 
         # log and print the results
-        log_results(training_return, timer_dict)
+
+        for i in range(params.num_subtasks):
+            log_results(training_return[i], timer_dict, tb_logger=tb_logger[i])
 
         #if totalsteps > params.max_timesteps:
-        if training_return['totalsteps'] > params.max_timesteps:
+        if training_return[0]['totalsteps'] > params.max_timesteps:
             break
         else:
             current_iteration += 1
 
     # end of training
-    sampler_agent.end()
-    trainer_tasks.put((parallel_util.END_SIGNAL, None))
+
+    for i in range(params.num_subtasks):
+        sampler_agent[i].end()
+        trainer_tasks[i].put((parallel_util.END_SIGNAL, None))
+
+
 
 def main():
     parser = base_config.get_base_config()
     params = base_config.make_parser(parser)
 
-    dir = get_dir(params.output_dir)
+    dir = osp.join('../log/baseline_' + params.task, params.output_dir)
+    dir = get_dir(dir)
+    if not osp.exists(dir):
+        os.makedirs(dir)
 
     if params.write_log:
-        logger.set_file_handler(path=params.output_dir,
-                                prefix='sparse_baseline' + params.task,
+        logger.set_file_handler(dir,
                                 time_str=params.exp_id)
 
     argparse_dict = vars(params)
     import json
-    import os.path as osp
-    with open(osp.join(params.output_dir, 'args.json'), 'w') as f:
+    with open(osp.join(dir, 'args.json'), 'w') as f:
         json.dump(argparse_dict, f)
 
     print('Training starts at {}'.format(init_path.get_abs_base_dir()))
 
-    train(trainer.Trainer, ppo_runner.Sampler, base_worker.Worker,
+    train(trainer.Trainer, ppo_runner, base_worker,
           ppo_policy.PPOPolicy, params)
 
 if __name__ == '__main__':

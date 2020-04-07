@@ -20,8 +20,6 @@ def play_episode_with_env(envs, policy, control_info = {}):
     control_info['step_index'] = 0
     control_info['reset'] = True
 
-    print(len(envs))
-
     # start the env (reset the environment)
     for env in envs:
         ob, _, _, _ = env.reset()
@@ -50,8 +48,9 @@ def play_episode_with_env(envs, policy, control_info = {}):
         # take the action
 
         for i in range(len(envs)):
-            ob, reward, done, _ = envs[i].step(action_signal['actions'][i])
-            feed_infos['start_state'].append(ob)
+            ob, reward, done, _ = envs[i].step(action_signal['action'][i])
+            if not done:
+                feed_infos['start_state'].append(ob)
             feed_infos['end_state'].append(ob)
             feed_infos['rewards'].append(reward)
 
