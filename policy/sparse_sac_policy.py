@@ -5,10 +5,10 @@ from util import tf_util, network_util
 from util.misc_util import generate_haar
 from collections import OrderedDict
 
-class SparsePPOPolicy(base_policy.BasePolicy):
+class SparsePolicy(base_policy.BasePolicy):
     def __init__(self, params, session, scope,
                  observation_size, action_size, task_names_list, *args, **kwargs):
-        super(SparsePPOPolicy, self).__init__(params, session,
+        super(SparsePolicy, self).__init__(params, session,
             scope, observation_size, action_size)
 
         self.required_keys = ['start_state', 'end_state', 'action', 'rewards', 'returns',
@@ -54,7 +54,8 @@ class SparsePPOPolicy(base_policy.BasePolicy):
             self._MLP = network_util.SparseMLP(
                 dims=network_shape, scope='policy_mlp', train=True,
                 activation_type=act_type, normalizer_type=norm_type,
-                init_data=init_data, linear_last_layer=True
+                init_data=init_data, linear_last_layer=True,
+                expansion_coeff = self.params.expansion_coeff,
             )
             self._input_ph['policy_sparse_masks'] = self._MLP._sparse_mask
             self._input_ph['policy_embed'] = self._MLP._embed
@@ -79,19 +80,83 @@ class SparsePPOPolicy(base_policy.BasePolicy):
         with tf.variable_scope(self._name_scope):
             self._update_operator = {}
             self._build_value_network_and_loss()
+            self._build_softq_network_and_loss()
             self._set_var_list()
-            self._build_ppo_loss_preprocess()
-            self._build_ppo_loss()
+            self._build_sac_loss_preprocess()
+            self._build_sac_loss()
 
             self._init_sparse_params()
+
+    def _build_softq_network_and_loss(self):
+        # build the placeholder for training the value function
+        self._input_ph['softq_target'] = \
+            tf.placeholder(tf.float32, [None, 1], name='value_target')
+
+        # build the baseline-value function
+        network_shape = [self._observation_size + self._action_size] + \
+                        self.params.softq_network_shape + [1]
+        num_layer = len(network_shape) - 1
+        act_type = \
+            [self.params.softq_activation_type] * (num_layer - 1) + [None]
+        norm_type = \
+            [self.params.softq_normalizer_type] * (num_layer - 1) + [None]
+        init_data = []
+        for _ in range(num_layer):
+            init_data.append(
+                {'w_init_method': 'normc', 'w_init_para': {'stddev': 1.0},
+                 'b_init_method': 'constant', 'b_init_para': {'val': 0.0}}
+            )
+        self._softq_MLP_one = network_util.MLP(
+            dims=network_shape, scope='softq_mlp_1', train=True,
+            activation_type=act_type, normalizer_type=norm_type,
+            init_data=init_data, linear_last_layer=True
+        )
+
+        self._softq_MLP_two = network_util.MLP(
+            dims=network_shape, scope='softq_mlp_2', train=True,
+            activation_type=act_type, normalizer_type=norm_type,
+            init_data=init_data, linear_last_layer=True
+        )
+
+        self._tensor['softq_1_weights'] = self._softq_MLP_one._w
+        self._tensor['softq_1_b'] = self._softq_MLP_one._b
+
+        self._tensor['softq_2_weights'] = self._softq_MLP_two._w
+        self._tensor['softq_2_b'] = self._softq_MLP_two._b
+
+        self._tensor['combined_softq_weights'] = self._tensor['softq_2_b'] + \
+                self._tensor['softq_2_weights'] + \
+                self._tensor['softq_1_b'] + self._tensor['softq_1_weights']
+
+        self._tensor['q_input'] = tf.concat([self._tensor['net_input'],
+                                             self._input_ph['action']], axis=0)
+
+        self._tensor['pred_softq_1'] = self._softq_MLP_one(self._tensor['q_input'])
+        self._tensor['pred_softq_2'] = self._softq_MLP_two(self._tensor['q_input'])
+
+        self._update_operator['softq_1_loss'] = .5 * tf.reduce_mean(
+            tf.square(
+                self._tensor['pred_softq_1'] - self._input_ph['softq_target']
+            )
+        )
+        self._update_operator['softq_2_loss'] = .5 * tf.reduce_mean(
+            tf.square(
+                self._tensor['pred_softq_2'] - self._input_ph['softq_target']
+            )
+        )
+
+        self._update_operator['softq_loss'] = self._update_operator['softq_1_loss'] + \
+            self._update_operator['softq_2_loss']
+
+        self._update_operator['softq_update_op'] = tf.train.AdamOptimizer(
+            learning_rate=self.params.softq_lr,
+            beta1=0.5, beta2=0.99, epsilon=1e-4
+        ).minimize(self._update_operator['softq_loss'])
 
     def _build_value_network_and_loss(self):
         # build the placeholder for training the value function
         self._input_ph['value_target'] = \
             tf.placeholder(tf.float32, [None, 1], name='value_target')
-
-        self._input_ph['old_values'] = \
-            tf.placeholder(tf.float32, [None, 1], name='old_value_est')
 
         # build the baseline-value function
         network_shape = [self._observation_size] + \
@@ -107,36 +172,19 @@ class SparsePPOPolicy(base_policy.BasePolicy):
                 {'w_init_method': 'normc', 'w_init_para': {'stddev': 1.0},
                  'b_init_method': 'constant', 'b_init_para': {'val': 0.0}}
             )
-        self._value_MLP = network_util.SparseMLP(
+        self._value_MLP = network_util.MLP(
             dims=network_shape, scope='value_mlp', train=True,
             activation_type=act_type, normalizer_type=norm_type,
             init_data=init_data, linear_last_layer=True
         )
 
-        self._input_ph['value_sparse_masks'] = self._value_MLP._sparse_mask
-        self._input_ph['value_embed'] = self._value_MLP._embed
         self._tensor['value_weights'] = self._value_MLP._w
         self._tensor['value_b'] = self._value_MLP._b
 
+        self._tensor['combined_value_weights'] = self._tensor['value_weights'] + \
+                                                 self._tensor['value_b']
+
         self._tensor['pred_value'] = self._value_MLP(self._tensor['net_input'])
-        # build the loss for the value network
-#        self._tensor['val_clipped'] = \
-#            self._input_ph['old_values'] + tf.clip_by_value(
-#            self._tensor['pred_value'] -
-#            self._input_ph['old_values'],
-#            -self._ppo_clip, self._ppo_clip)
-#        self._tensor['val_loss_clipped'] = tf.square(
-#            self._tensor['val_clipped'] - self._input_ph['value_target']
-#        )
-#        self._tensor['val_loss_unclipped'] = tf.square(
-#            self._tensor['pred_value'] - self._input_ph['value_target']
-#        )
-#
-#
-#        self._update_operator['vf_loss'] = .5 * tf.reduce_mean(
-#            tf.maximum(self._tensor['val_loss_clipped'],
-#                       self._tensor['val_loss_unclipped'])
-#        )
 
         self._update_operator['vf_loss'] = .5 * tf.reduce_mean(
             tf.square(
@@ -144,12 +192,25 @@ class SparsePPOPolicy(base_policy.BasePolicy):
             )
         )
 
+        self._target_value_MLP = network_util.MLP(
+            dims=network_shape, scope='target_value_mlp', train=True,
+            activation_type=act_type, normalizer_type=norm_type,
+            init_data=init_data, linear_last_layer=True
+        )
+
+        self._tensor['pred_target_value'] = self._target_value_MLP(self._tensor['net_input'])
+        self._tensor['target_value_weights'] = self._value_MLP._w
+        self._tensor['target_value_b'] = self._value_MLP._b
+
+        self._tensor['combined_target_value_weights'] = self._tensor['target_value_weights'] + \
+                                                        self._tensor['target_value_b']
+
         self._update_operator['vf_update_op'] = tf.train.AdamOptimizer(
             learning_rate=self.params.value_lr,
             beta1=0.5, beta2=0.99, epsilon=1e-4
         ).minimize(self._update_operator['vf_loss'])
 
-    def _build_ppo_loss_preprocess(self):
+    def _build_sac_loss_preprocess(self):
         # proximal policy optimization
         self._input_ph['action'] = tf.placeholder(
             tf.float32, [None, self._action_size],
@@ -207,21 +268,9 @@ class SparsePPOPolicy(base_policy.BasePolicy):
             self._tensor['action_dist_logstd']
         ) / self._input_ph['batch_size']
 
-    def _build_ppo_loss(self):
-        self._update_operator['pol_loss_unclipped'] = \
-            -self._tensor['ratio'] * \
-            tf.reshape(self._input_ph['advantage'], [-1])
-
-        self._update_operator['pol_loss_clipped'] = \
-            -self._tensor['ratio_clipped'] * \
-            tf.reshape(self._input_ph['advantage'], [-1])
-
-        self._update_operator['surr_loss'] = tf.reduce_mean(
-            tf.maximum(self._update_operator['pol_loss_unclipped'],
-                       self._update_operator['pol_loss_clipped'])
-        )
-
-        self._update_operator['loss'] = self._update_operator['surr_loss']
+    def _build_sac_loss(self):
+        self._update_operator['loss'] = \
+            tf.reduce_mean(self._tensor['log_p_n'] - self._input_ph['advantage'])
 
         if self.params.use_weight_decay:
             self._update_operator['weight_decay_loss'] = \
@@ -230,20 +279,11 @@ class SparsePPOPolicy(base_policy.BasePolicy):
                 self._update_operator['weight_decay_loss'] * \
                 self.params.weight_decay_coefficient
 
-        # self._update_operator['optimizer'] = tf.train.AdamOptimizer(
-        #          learning_rate=self._input_ph['lr'],
-        #          beta1=0.5, beta2=0.99, epsilon=1e-4
-        # )
 
         self._update_operator['policy_gradients'] = {
             self._input_ph['policy_sparse_masks'][i]:
             tf.gradients(self._update_operator['surr_loss'], self._MLP._w[i]) \
             for i in range(len(self._input_ph['policy_sparse_masks']))}
-
-        self._update_operator['value_gradients'] = {
-            self._input_ph['value_sparse_masks'][i]:
-            tf.gradients(self._update_operator['vf_loss'], self._value_MLP._w[i]) \
-            for i in range(len(self._input_ph['value_sparse_masks']))}
 
         self._update_operator['update_op'] = tf.train.AdamOptimizer(
              learning_rate=self._input_ph['lr'],
@@ -259,7 +299,6 @@ class SparsePPOPolicy(base_policy.BasePolicy):
             tf_util.SetFromFlat(self._session, self._trainable_var_list)
 
     def train(self, data_dict, replay_buffer, training_info={}):
-
         self._generate_advantage(data_dict)
         stats = {'surr_loss': [], 'entropy': [], 'kl': [], 'vf_loss': []}
         update_kl_mean = -.1
@@ -272,6 +311,8 @@ class SparsePPOPolicy(base_policy.BasePolicy):
         self._timesteps_so_far += len(data_dict[temp_key]['start_state']) * num_tasks
         total_batch_len = len(data_dict[temp_key]['start_state'])
         total_batch_inds = np.arange(total_batch_len)
+
+        value_params = self._get_target_value_weights()
 
         for epoch in range(max(self.params.policy_epochs,
                                self.params.value_epochs)):
@@ -293,7 +334,6 @@ class SparsePPOPolicy(base_policy.BasePolicy):
 
                     feed_dict = {**self._default_policy_masks[tn],
                         **self._default_policy_embed[tn],
-                        **self._default_value_masks[tn], **self._default_value_embed[tn],
                         ** feed_dict}
 
                     feed_dict[self._input_ph['batch_size']] = \
@@ -313,21 +353,31 @@ class SparsePPOPolicy(base_policy.BasePolicy):
                         stats['kl'].append(kl)
 
                         # train the baseline function
-                        feed_dict[self._input_ph['old_values']] = \
-                            data_dict[tn]['value'][batch_inds]
                         feed_dict[self._input_ph['value_target']] = \
                             data_dict[tn]['value_target'][batch_inds]
-                        vf_loss, value_gradients, _ = self._session.run(
+                        feed_dict[self._input_ph['softq_target']] = \
+                            data_dict[tn]['softq_target'][batch_inds]
+
+                        vf_loss, _ = self._session.run(
                             [self._update_operator['vf_loss'],
-                             self._update_operator['value_gradients'],
                              self._update_operator['vf_update_op']],
                             feed_dict=feed_dict
                         )
-                        stats['vf_loss'].append(vf_loss)
 
-                        self.update_masks(policy_gradients, value_gradients, tn)
+                        softq_loss = self._session.run(
+                            [self._update_operator['softq_loss'],
+                             self._update_operator['softq_update_op']],
+                            feed_dict=feed_dict
+
+                        )
+                        stats['vf_loss'].append(vf_loss)
+                        stats['softq_loss'].append(softq_loss)
+
+                        self.update_sparse_weights(policy_gradients, tn)
 
         # run final feed_dict with whole batch
+
+        self.update_value_params(value_params)
 
         kl_total = 0
         for tn in self.task_names:
@@ -338,7 +388,6 @@ class SparsePPOPolicy(base_policy.BasePolicy):
             }
 
             feed_dict = {**self._default_policy_masks[tn], **self._default_policy_embed[tn],
-                           **self._default_value_masks[tn], **self._default_value_embed[tn],
                          **feed_dict}
             feed_dict[self._input_ph['batch_size']] = \
                 np.array(float(total_batch_len))
@@ -362,7 +411,6 @@ class SparsePPOPolicy(base_policy.BasePolicy):
         return stats, data_dict
 
     def _update_adaptive_parameters(self, kl_epoch, i_kl_total):
-        # update the lambda of kl divergence
         if self.params.use_kl_penalty:
             if kl_epoch > self.params.target_kl_high * self.params.target_kl:
                 self._current_kl_lambda *= self.params.kl_alpha
@@ -397,14 +445,11 @@ class SparsePPOPolicy(base_policy.BasePolicy):
 
     def act(self, data_dict, task_name, *params):
         policy_masks = self._default_policy_masks[task_name]
-        value_masks = self._default_value_masks[task_name]
         policy_embed = self._default_policy_embed[task_name]
-        value_embed = self._default_value_embed[task_name]
 
         action_dist_mu, action_dist_logstd = self._session.run(
             [self._tensor['action_dist_mu'], self._tensor['action_dist_logstd']],
             feed_dict={**policy_masks, **policy_embed,
-                       **value_masks, **value_embed,
                        self._input_ph['start_state']:
                        np.reshape(data_dict['start_state'],
                                   [-1, self._observation_size])}
@@ -420,11 +465,16 @@ class SparsePPOPolicy(base_policy.BasePolicy):
         for key in all_data_dict:
             data_dict = all_data_dict[key]
             # get the baseline function
-            data_dict["value"] = self.value_pred(data_dict)
+            data_dict["value"], data_dict["t_value"], \
+                data_dict["softq_1"], data_dict["softq_2"] = self.value_pred(data_dict)
+            data_dict["new_action"], data_dict["new_action_dist_mu"], \
+                data_dict["new_action_dist_logstd"] = self.act(data_dict, key)
+            data_dict["new_logprob"] = tf_util.gauss_log_prob_np(data_dict["new_action_dist_mu"],
+                data_dict["new_action_dist_logstd"], data_dict["new_action"])
             # esitmate the advantages
-            data_dict['advantage'] = np.zeros(data_dict['returns'].shape)
+
+            data_dict['softq_target'] = np.zeros(data_dict['returns'].shape)
             start_id = 0
-            #value = []
 
             print(np.mean(data_dict['returns']), flush=True)
 
@@ -434,27 +484,21 @@ class SparsePPOPolicy(base_policy.BasePolicy):
                 end_id = start_id + current_length
 
                 #value.append(data_dict['value'][start_id+1:end_id+1])
+
+                data_dict['softq_pred'] = np.min(data_dict['softq_1'], data_dict['softq_2'])
+                data_dict['value_target'] = data_dict['softq_pred'] - data_dict["new_logprob"]
+
                 for i_step in reversed(range(current_length)):
                     if i_step < current_length - 1:
-                        delta = data_dict['returns'][i_step + start_id] \
-                                + self.params.gamma * \
-                                data_dict['value'][i_step + start_id + 1] \
-                                - data_dict['value'][i_step + start_id]
-                        data_dict['advantage'][i_step + start_id] = \
-                            delta + self.params.gamma * self.params.gae_lam \
-                            * data_dict['advantage'][i_step + start_id + 1]
+                        data_dict['softq_target'] = data_dict["returns"][i_step + start_id] +\
+                                self.params.gamma * data_dict['target_value'][i_step + start_id + 1]
                     else:
-                        delta = data_dict['returns'][i_step + start_id] \
-                                - data_dict['value'][i_step + start_id]
-                        data_dict['advantage'][i_step + start_id] = delta
+                        data_dict['softq_target'] = data_dict["returns"][i_step + start_id]
+
                 start_id = end_id
             assert end_id == len(data_dict['rewards'])
 
-            data_dict['value_target'] = \
-                np.reshape(data_dict['advantage'], [-1, 1])
-            data_dict['advantage'] -= data_dict['advantage'].mean()
-            data_dict['advantage'] /= (data_dict['advantage'].std() + 1e-8)
-            data_dict['advantage'] = np.reshape(data_dict['advantage'], [-1, 1])
+            all_data_dict[key] = data_dict
 
     def _init_sparse_params(self):
 
@@ -462,11 +506,6 @@ class SparsePPOPolicy(base_policy.BasePolicy):
         self._default_policy_grad = {}
         self._default_policy_params = {}
         self._default_policy_embed = {task_name:{} for task_name in self.task_names}
-
-        self._default_value_masks = {}
-        self._default_value_grad = {}
-        self._default_value_params = {}
-        self._default_value_embed = {task_name:{} for task_name in self.task_names}
 
         for x in self._input_ph['policy_embed']:
             shape = x.get_shape().as_list()
@@ -479,43 +518,19 @@ class SparsePPOPolicy(base_policy.BasePolicy):
                 embed = full_rotation[i * n_task:(i+1)*n_task]
                 self._default_policy_embed[x] = embed
 
-        for x in self._input_ph['value_embed']:
-            shape = x.get_shape().as_list()
-            dim_out = shape[1]
-            n_task = len(self.task_names)
-
-            full_rotation = generate_haar(dim_out)
-
-            for i, task_name in enumerate(self.task_names):
-                embed = full_rotation[i * n_task:(i+1)*n_task]
-                self._default_value_embed[x] = embed
-
         for task_name in self.task_names:
             p_masks = OrderedDict()
             p_grad = OrderedDict()
             p_params = OrderedDict()
 
-            v_masks = OrderedDict()
-            v_grad = OrderedDict()
-            v_params = OrderedDict()
             for x in self._input_ph['policy_sparse_masks']:
                 p_masks[x] = np.ones(x.get_shape().as_list())
                 p_grad[x] = np.zeros(x.get_shape().as_list())
                 p_params[x] = np.ones(x.get_shape().as_list())
 
-
-            for y in self._input_ph['value_sparse_masks']:
-                v_masks[y] = np.ones(y.get_shape().as_list())
-                v_grad[y] = np.zeros(y.get_shape().as_list())
-                v_params[y] = np.ones(y.get_shape().as_list())
-
             self._default_policy_masks[task_name] = p_masks
             self._default_policy_grad[task_name] = p_grad
             self._default_policy_params[task_name] = p_params
-
-            self._default_value_masks[task_name] = v_masks
-            self._default_value_grad[task_name] = v_grad
-            self._default_value_params[task_name] = v_params
 
     def get_weights(self, task_name):
         weights = self._get_network_weights()
@@ -530,52 +545,107 @@ class SparsePPOPolicy(base_policy.BasePolicy):
                 self._default_policy_embed[task_name][self._input_ph['policy_embed'][ix]] @ \
                 weights[name]
 
-        for jx in range(len(self._tensor['value_weights'])):
-            var = self._tensor['value_weights'][jx]
+        for ix in range(len(self._tensor['policy_b'])):
+            var = self._tensor['policy_b'][ix]
             name = var.name.replace(self._name_scope, '')
             assert name in weights
-            weights[name] = weights[name] * \
-                self._default_value_masks[task_name][self._input_ph['value_sparse_masks'][jx]]
 
-            weights[name] = \
-                self._default_value_embed[task_name][self._input_ph['value_embed'][ix]] @ \
-                weights[name]
+        for var in self._tensor['combined_value_weights']:
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+
+        for var in self._tensor['combined_target_value_weights']:
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+
+        for var in self._tensor['combined_softq_weights']:
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
 
         return weights
+
+    def get_dense_weights(self):
+        weights = self._get_network_weights()
+        for ix in range(len(self._tensor['policy_weights'])):
+            var = self._tensor['policy_weights'][ix]
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+
+        for ix in range(len(self._tensor['policy_b'])):
+            var = self._tensor['policy_b'][ix]
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+
+        for var in self._tensor['combined_value_weights']:
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+
+        for var in self._tensor['combined_target_value_weights']:
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+
+        for var in self._tensor['combined_softq_weights']:
+            name = var.name.replace(self._name_scope, '')
+            assert name in weights
+
+        return weights
+
+    def _get_target_value_weights(self):
+        value_weights = []
+        weights = self._get_network_weights()
+        for var in self._tensor['combined_target_value_weights']:
+            name = var.name.replace(self._name_scope, '')
+            value_weights.append((weights[name], name))
+
+        return value_weights
+
+    def _get_value_weights(self):
+        value_weights = []
+        weights = self._get_network_weights()
+        for var in self._tensor['combined_value_weights']:
+            name = var.name.replace(self._name_scope, '')
+            value_weights.append((weights[name], name))
+
+        return value_weights
+
+    def update_value_params(self, old_weights):
+        new_weights = self._get_value_weights()
+
+        final_weights = {}
+        for x,y in zip(old_weights, new_weights):
+            w_x, w_y = x[0], y[0]
+            w_f = (1-self.params.polyak) * w_x + self.params.polyak * w_y
+
+            final_weights[x[1]] = w_f
+
+        all_weights = self.get_dense_weights()
+        for var in self._tensor['combined_target_value_weights']:
+            name = var.name.replace(self._name_scope, '')
+            all_weights[name] = final_weights[name]
+
+        self.set_weights(all_weights)
 
     def set_weights(self, weight_dict):
         return self._set_network_weights(weight_dict)
 
     def value_pred(self, data_dict):
-        return self._session.run(
-            self._tensor['pred_value'],
-            feed_dict={**self._default_policy_masks,
-                       **self._default_value_masks,
+        v, tv = self._session.run(
+            [self._tensor['pred_value'], self._tensor['pred_target_value']],
+            feed_dict={**self._default_policy_masks, **self._default_policy_embed,
                         self._input_ph['start_state']: data_dict['end_state']}
         )
+        q1, q2 = self.softq_pred(data_dict)
+        return v, tv, q1, q2
 
-    def get_sparse_weights(self):
-        policy_weights = self._session.run(self._tensor['policy_weights'])
-        value_weights = self._session.run(self._tensor['value_weights'])
-        policy_b = self._session.run(self._tensor['policy_b'])
-        value_b = self._session.run(self._tensor['value_b'])
+    def softq_pred(self, data_dict):
+        return self._session.run(
+            [self._tensor['pred_softq_1'], self._tensor['pred_softq_2']],
+            feed_dict={**self._default_policy_masks, **self._default_policy_embed,
+                       self._input_ph['start_state']: data_dict['start_state'],
+                       self._input_ph['action']: data_dict['action']}
+        )
 
-        policy_return = []
-        value_return = []
-        for i in range(len(self._tensor['policy_weights'])):
-            sparse_ix = self._default_policy_masks[self._input_ph['policy_sparse_masks'][i]]
-            w = policy_weights[i] * sparse_ix
-            policy_return.append((w, policy_b[i]))
-
-        for i in range(len(self._tensor['value_weights'])):
-            sparse_ix = self._default_value_masks[self._input_ph['value_sparse_masks'][i]]
-            w = value_weights[i] * sparse_ix
-            value_return.append((w, value_b[i]))
-
-        return policy_return, value_return
-
-    def update_sparse_weights(self, policy_gradients, value_gradients, task_name):
-
+    def update_sparse_weights(self, policy_gradients, task_name):
         for i in policy_gradients:
             gradient = policy_gradients[i]
             new_param = self._default_policy_params[task_name][i] + (np.abs(gradient) ** 2)
@@ -585,16 +655,6 @@ class SparsePPOPolicy(base_policy.BasePolicy):
             new_param, new_mask = self.reactivate_random(new_mask, new_param)
             self._default_policy_params[task_name][i] = new_param
             self._default_policy_masks[task_name][i] = new_mask
-
-        for i in value_gradients:
-            gradient = value_gradients[i]
-            new_param = self._default_value_params[task_name][i] + (np.abs(gradient) ** 2)
-            new_mask = np.cast((self._default_value_params[task_name][i] >= 0), np.int32)
-
-            self._default_value_grad[task_name][i] += gradient
-            new_param, new_mask = self.reactivate_random(new_mask, new_param)
-            self._default_value_params[task_name][i] = new_param
-            self._default_value_masks[task_name][i] = new_mask
 
         for task in self._default_policy_masks:
             if task == task_name:
@@ -614,25 +674,9 @@ class SparsePPOPolicy(base_policy.BasePolicy):
                 other_policy_masks[i] = new_mask
                 other_policy_params[i] = new_param
 
-
-            other_value_masks = self._default_value_masks[task_name]
-            other_value_params = self._default_value_params[task_name]
-            other_value_grad = self._default_value_grad[task_name]
-
-            for i in value_gradients:
-                gradient = value_gradients[i]
-                sign = 2 * np.cast((gradient * other_value_grad[i]) > 0, np.int32) - 1
-                new_param = other_value_params[i] + sign * (np.abs(gradient) ** 2)
-                new_mask = np.cast((new_param >= 0), np.int32)
-
-                other_value_grad[i] += gradient
-                new_param, new_mask = self.reactivate_random(new_mask, new_param)
-                other_value_masks[i] = new_mask
-                other_value_params[i] = new_param
-
     def reactivate_random(self, mask, params):
-        if np.sum(mask) < np.size(mask) // self.params.num_tasks:
-            to_replace = (np.size(mask) // self.params.num_tasks) - np.sum(mask)
+        if np.sum(mask) < np.size(mask) // self.params.num_subtasks:
+            to_replace = (np.size(mask) // self.params.num_subtasks) - np.sum(mask)
             indices = np.array(mask.nonzero()).T
             num_ix = len(indices)
             chosen = self._npr.choice(np.arange(num_ix), to_replace, replace=False)

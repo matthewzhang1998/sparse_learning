@@ -89,7 +89,7 @@ def get_base_config():
     parser.add_argument("--render_iter", type=int, default=10)
     parser.add_argument("--render_save_loc", type=str, default="./render/")
 
-    parser.add_argument("--num_subtasks", type=int, default=2)
+    parser.add_argument("--num_subtasks", type=int, default=10)
 
     parser.add_argument("--sparsification_iter", type=int, default=50)
     parser.add_argument("--sparsification_percent", type=float, default=0.1)
@@ -101,6 +101,8 @@ def get_base_config():
     parser.add_argument("--use_subtask_value", type=int, default=1)
     parser.add_argument("--mask_penalty", type=float, default=1e-4)
     parser.add_argument("--correlation_coefficient", type=float, default=1e-2)
+
+    parser.add_argument("--expansion_coeff", type=int, default = 5)
 
     return parser
 

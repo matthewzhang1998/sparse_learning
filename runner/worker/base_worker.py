@@ -26,7 +26,8 @@ class Worker(multiprocessing.Process):
     def __init__(self, params, observation_size, action_size,
                  action_distribution,
                  network_type, task_queue, result_queue, worker_id,
-                 name_scope='worker', subtask=None):
+                 task_name=0,
+                 name_scope='worker'):
 
         # the multiprocessing initialization
         multiprocessing.Process.__init__(self)
@@ -34,6 +35,7 @@ class Worker(multiprocessing.Process):
         self._name_scope = name_scope
         self._worker_id = worker_id
         self._network_type = network_type
+        self.task_name = task_name
         self._npr = np.random.RandomState(params.seed + self._worker_id)
 
         self._observation_size = observation_size
@@ -47,8 +49,6 @@ class Worker(multiprocessing.Process):
         self._envs = []
         self._environments_cache = []
         self._episodes_so_far = 0
-
-        self.subtask = subtask
 
         logger.info('Worker {} online'.format(self._worker_id))
         self._base_dir = init_path.get_base_dir()
@@ -77,6 +77,16 @@ class Worker(multiprocessing.Process):
                     for episode in traj_episode:
                         self._result_queue.put(episode)
 
+                if next_task[0] == parallel_util.WORKER_RUNNING_MT:
+
+                    self._num_envs_required = int(next_task[1])
+
+                    # collect rollouts
+                    traj_episode = self._play()
+                    self._task_queue.task_done()
+                    for episode in traj_episode:
+                        self._result_queue.put({**episode, "task name": self.task_name})
+
 
                 elif next_task[0] == parallel_util.AGENT_SET_WEIGHTS:
                     # set parameters of the actor policy
@@ -92,10 +102,17 @@ class Worker(multiprocessing.Process):
                     self._task_queue.task_done()
                     break
 
-                elif next_task[0] == parallel_util.AGENT_RENDER:
-                    self._num_envs_required = 1
-                    self._render(next_task[1]['it'], next_task[1]['save_loc'])
+                elif next_task[0] == parallel_util.AGENT_SET_WEIGHTS_MULTI:
+                    weights = next_task[1]
+                    self._set_weights(weights[self.task_name])
+                    time.sleep(0.001)  # yield the process
                     self._task_queue.task_done()
+
+                elif next_task[0] == parallel_util.AGENT_RENDER:
+                    pass
+                    #self._num_envs_required = 1
+                    #self._render(next_task[1]['it'], next_task[1]['save_loc'])
+                    #self._task_queue.task_done()
                 else:
                     logger.error('Invalid task type {}'.format(next_task[0]))
             return
@@ -121,29 +138,19 @@ class Worker(multiprocessing.Process):
         self._session = tf.Session(config=config)
 
     def _build_env(self):
-
         if self.params.cache_environments:
             while len(self._environments_cache) < self.params.num_cache:
-                _env, self._env_info = env_register.make_env(
-                    self.params.task, self._npr.randint(0, 9999),
-                    self.params.episode_length,
-                    {'allow_monitor': self.params.monitor \
-                                      and self._worker_id == 0,
-                     'subtask': self.subtask}
-                )
+                _env, self._env_info = \
+                    env_register.make_mt_env(self.task_name, self.params.num_subtasks)
                 _env.reset()
 
                 self._environments_cache.append(copy.deepcopy(_env))
 
         else:
             while len(self._envs) < self._num_envs_required:
-                _env, self._env_info = env_register.make_env(
-                    self.params.task, self._npr.randint(0, 9999),
-                    self.params.episode_length,
-                    {'allow_monitor': self.params.monitor \
-                                      and self._worker_id == 0,
-                     'subtask': self.subtask}
-                )
+                _env, self._env_info = \
+                    env_register.make_mt_env(self.task_name, self.params.num_subtasks)
+                _env.reset()
                 _env.reset()
                 self._envs.append(_env)
 
@@ -185,16 +192,18 @@ class Worker(multiprocessing.Process):
         return self._network.act(data_dict, control_info)
 
     def _render_act(self, obs):
-        act = self._network.act({'start_state': obs})
+        pass
+        #act = self._network.act({'start_state': obs})
 
-        return act['action'][0]
+        #return act['action'][0]
 
     def _render(self, it, save_loc):
-        self._build_env()
-        print("____RENDERING WORKER____")
+        pass
+        #self._build_env()
+        #print("____RENDERING WORKER____")
 
-        self._envs[0].visualize_policy_offscreen(self._render_act,
-            horizon=self.params.episode_length, it=it, save_loc=save_loc)
+        #self._envs[0].visualize_policy_offscreen(self._render_act,
+        #    horizon=self.params.episode_length, it=it, save_loc=save_loc)
 
     def _set_weights(self, network_weights):
         self._network.set_weights(network_weights)

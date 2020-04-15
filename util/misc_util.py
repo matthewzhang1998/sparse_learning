@@ -93,6 +93,10 @@ def logsum(vec, axis=0, keepdims=True):
     return np.log(np.sum(np.exp(vec - maxv), axis=axis, keepdims=keepdims)) + \
         maxv
 
+def generate_haar(dim, seed=0):
+    m = np.random.normal(0, 1, [dim, dim], seed=seed)
+    q,_ = np.linalg.qr(m)
+    return q # q is unitary and a.e. nondegenerate
 
 if __name__ == '__main__':
     from timeit import default_timer as timer

@@ -35,6 +35,13 @@ def gauss_log_prob(mu, logstd, x):
          - logstd
     return tf.reduce_sum(gp, [1])
 
+def gauss_log_prob_np(mu, logstd, x):
+    # probability to take action x, given paramaterized guassian distribution
+    var = np.exp(2 * logstd)
+    gp = - np.square(x - mu) / (2 * var) \
+         - .5 * np.log(2 * np.pi) \
+         - logstd
+    return np.sum(gp, axis=1)
 
 def gauss_KL(mu1, logstd1, mu2, logstd2):
     # KL divergence between two paramaterized guassian distributions

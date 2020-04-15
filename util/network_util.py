@@ -314,13 +314,14 @@ class SparseMLP(object):
     """
 
     def __init__(self, dims, scope, train,
-                 activation_type, normalizer_type, init_data,
-                 linear_last_layer = False, dtype=tf.float32):
+                 activation_type, normalizer_type, init_data, n_tasks=1,
+                 linear_last_layer = False, dtype=tf.float32, expansion_coeff=1):
 
         self._scope = scope
         self._num_layer = len(dims) - 1  # the last one is the input dim
         self._w = [None] * self._num_layer
         self._b = [None] * self._num_layer
+        self._embed = [None] * self._num_layer
 
         self._sparse_mask = [None] * self._num_layer
         self._train = train
@@ -330,21 +331,28 @@ class SparseMLP(object):
         self._init_data = init_data
         self.linear_last_layer = linear_last_layer
 
+        self.expansion_coeff = expansion_coeff
+
         # initialize variables
         with tf.variable_scope(scope):
             for ii in range(self._num_layer):
                 with tf.variable_scope("layer_{}".format(ii)):
                     dim_in, dim_out = dims[ii], dims[ii + 1]
 
+                    self._embed[ii] = tf.placeholder(
+                        tf.float32, shape=[dim_in, expansion_coeff* dim_in],
+                        name="embedding",
+                    )
+
                     self._w[ii] = weight_variable(
-                        shape=[dim_in, dim_out], name='w',
+                        shape=[expansion_coeff* dim_in, dim_out], name='w',
                         init_method=self._init_data[ii]['w_init_method'],
                         init_para=self._init_data[ii]['w_init_para'],
                         dtype=dtype, trainable=self._train
                     )
 
                     self._sparse_mask[ii] = tf.placeholder(
-                        tf.float32, shape=[dim_in, dim_out],
+                        tf.float32, shape=[expansion_coeff * dim_in, dim_out],
                         name="sp_mask"
                     )
 
@@ -363,6 +371,7 @@ class SparseMLP(object):
             for ii in range(self._num_layer):
                 with tf.variable_scope("layer_{}".format(ii)):
                     layer = input_vec if ii == 0 else self._h[ii - 1]
+                    layer = tf.matmul(layer, self._embed[ii])
                     self._h[ii] = tf.matmul(layer, self._w[ii] * self._sparse_mask[ii]) + self._b[ii]
 
                     if (ii == self._num_layer - 1) and self.linear_last_layer:
